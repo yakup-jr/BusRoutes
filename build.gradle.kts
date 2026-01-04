@@ -32,6 +32,8 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.assertj:assertj-core:3.27.6")
+    testImplementation("org.mockito:mockito-core:5.21.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
