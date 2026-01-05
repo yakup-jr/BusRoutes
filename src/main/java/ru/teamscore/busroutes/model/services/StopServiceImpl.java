@@ -39,11 +39,14 @@ public class StopServiceImpl implements StopService {
                 return stop;
             }
         }
-        return null;
+        throw new NotFoundException(name, ItemType.STOP);
     }
 
     @Override
     public void removeStopByName(String name) {
+        if (getStopByName(name) == null) {
+            throw new NotFoundException(name, ItemType.STOP);
+        }
         stops.removeIf(stop -> stop.getName().equals(name));
     }
 }

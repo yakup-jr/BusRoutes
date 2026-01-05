@@ -1,4 +1,4 @@
-package ru.teamscore.busroutes.services;
+package ru.teamscore.busroutes.model.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,7 +7,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
-import ru.teamscore.busroutes.model.services.StopServiceImpl;
 
 import java.util.ArrayList;
 
@@ -28,7 +27,8 @@ class StopServiceImplTest {
 
     @Test
     void addStop() {
-        Stop stop = Stop.valueOf("Ulyanovskaya Street", 53.198050, 50.108750);
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
         Stop newStop = stopService.addStop(stop);
 
         assertThat(newStop).isEqualTo(stop);
@@ -38,7 +38,8 @@ class StopServiceImplTest {
 
     @Test
     void getStopByName() {
-        Stop stop = Stop.valueOf("Ulyanovskaya Street", 53.198050, 50.108750);
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
         stopService.addStop(stop);
 
         Stop foundStop = stopService.getStopByName("Ulyanovskaya Street");
@@ -49,10 +50,12 @@ class StopServiceImplTest {
 
     @Test
     void updateStopByName() {
-        Stop stop = Stop.valueOf("Ulyanovskaya Street", 53.198050, 50.108750);
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
         stopService.addStop(stop);
 
-        Stop newStop = Stop.valueOf("Ulyanovskaya Street 2", 54.198050, 51.108750);
+        Stop newStop = Stop.valueOf("Ulyanovskaya Street 2",
+            Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
         Stop updatedStop = stopService.updateStopByName("Ulyanovskaya Street", newStop);
 
         assertThat(updatedStop).isEqualTo(newStop);
@@ -61,7 +64,8 @@ class StopServiceImplTest {
 
     @Test
     void removeStopByName() {
-        Stop stop = Stop.valueOf("Ulyanovskaya Street", 53.198050, 50.108750);
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
         stopService.addStop(stop);
 
         stopService.removeStopByName("Ulyanovskaya Street");

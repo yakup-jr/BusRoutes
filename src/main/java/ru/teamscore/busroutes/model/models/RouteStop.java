@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.model.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -17,6 +18,7 @@ public class RouteStop {
         this.stop = stop;
     }
 
+    @JsonCreator
     public static RouteStop valueOf(int arriveAtFromStart, int order, Stop stop) {
         if (arriveAtFromStart < 0) {
             throw new IllegalArgumentException("Arrive at from start must be non-negative");

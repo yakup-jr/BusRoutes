@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.model.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -14,20 +15,16 @@ public class Stop {
         this.coordinates = new GeographicCoordinates(latitude, longitude);
     }
 
-    public static Stop valueOf(String name, double latitude, double longitude) {
-        if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException("Latitude must be between -90 and 90");
-        }
-        if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException("Longitude must be between -180 and 180");
-        }
-
-        return new Stop(name, latitude, longitude);
+    @JsonCreator
+    public static Stop valueOf(
+        String name, GeographicCoordinates coordinates
+    ) {
+        return new Stop(name, coordinates.latitude, coordinates.longitude);
     }
 
     @Getter
     @EqualsAndHashCode
-    private static class GeographicCoordinates {
+    public static class GeographicCoordinates {
         private final double latitude;
         private final double longitude;
 
@@ -36,7 +33,8 @@ public class Stop {
             this.longitude = longitude;
         }
 
-        public GeographicCoordinates valueOf(double latitude, double longitude) {
+        @JsonCreator
+        public static GeographicCoordinates valueOf(double latitude, double longitude) {
             if (latitude < -90 || latitude > 90) {
                 throw new IllegalArgumentException("Latitude out of range");
             }

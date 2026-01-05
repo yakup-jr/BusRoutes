@@ -2,7 +2,6 @@ package ru.teamscore.busroutes.model.services;
 
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.models.Route;
-import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.model.models.Travel;
 
 import java.util.List;
@@ -10,15 +9,15 @@ import java.util.List;
 public interface RouteService {
     Route addRoute(Route route);
 
-    List<Travel> getRoutesByStop(Stop stop, TravelSortOption sort);
+    List<Travel> getRoutesByStop(String stopName, TravelSortOption sort);
 
-    List<Travel> getRoutesByStops(Stop from, Stop to, TravelSortOption sort);
+    List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort);
 
     Route getRouteByName(String name);
 
     Route copyRoute(Route route, boolean isReverseOrder);
 
-    Route updateRouteByName(Route oldRoute, Route newRoute);
+    Route updateRouteByName(String oldRouteName, Route newRoute);
 
-    void removeRoute(Route route);
+    void removeRoute(String routeName);
 }

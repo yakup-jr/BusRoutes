@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.model.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -25,6 +26,7 @@ public class Route {
         this.businessHours = businessHours;
     }
 
+    @JsonCreator
     public static Route valueOf(String name, String type, List<RouteStop> stops, Duration interval,
                                 BusinessHours businessHours) {
         if (name.isEmpty()) {

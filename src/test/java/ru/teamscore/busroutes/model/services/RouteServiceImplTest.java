@@ -1,4 +1,4 @@
-package ru.teamscore.busroutes.services;
+package ru.teamscore.busroutes.model.services;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,8 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.*;
-import ru.teamscore.busroutes.model.services.RouteService;
-import ru.teamscore.busroutes.model.services.RouteServiceImpl;
 
 import java.time.Duration;
 import java.time.LocalTime;
@@ -24,8 +22,10 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class RouteServiceImplTest {
     private RouteService routeService;
-    private final Stop stop1 = Stop.valueOf("Stop1", 53.198050, 50.108750);
-    private final Stop stop2 = Stop.valueOf("Stop2", 53.195873, 50.104954);
+    private final Stop stop1 =
+        Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+    private final Stop stop2 =
+        Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
     private Route route1;
     private Route route2;
 
@@ -52,18 +52,18 @@ class RouteServiceImplTest {
 
     @Test
     void addRoute_ReturnNewRoute() {
-        List<RouteStop> stops = new ArrayList<>();
-        Stop stop3 = Stop.valueOf("Stop3", 53.198050, 50.108750);
-        stops.add(RouteStop.valueOf(0, 1, stop3));
+        Stop stop3 =
+            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        Stop stop4 =
+            Stop.valueOf("Stop4", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
 
-        Stop stop4 = Stop.valueOf("Stop4", 53.195873, 50.104954);
-        stops.add(RouteStop.valueOf(120, 2, stop4));
+        List<RouteStop> stops =
+            List.of(RouteStop.valueOf(0, 1, stop3), RouteStop.valueOf(120, 2, stop4));
 
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(6, 30), LocalTime.of(0, 0));
-
         Route newRoute =
-            Route.valueOf("route1", "bus", stops, Duration.ofSeconds(120), businessHours);
+            Route.valueOf("route3", "bus", stops, Duration.ofSeconds(120), businessHours);
 
         Route addedRoute = routeService.addRoute(newRoute);
 
@@ -73,7 +73,8 @@ class RouteServiceImplTest {
 
     @Test
     void getRoutesByStop_TimeInRoute_ReturnSortedByTimeInRoute() {
-        List<Travel> travels = routeService.getRoutesByStop(stop1, TravelSortOption.TIME_IN_ROUTE);
+        List<Travel> travels =
+            routeService.getRoutesByStop("Stop1", TravelSortOption.TIME_IN_ROUTE);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getTimeInRoute()).isLessThan(travels.get(1).getTimeInRoute());
@@ -82,7 +83,7 @@ class RouteServiceImplTest {
     @Test
     void getRoutesByStop_NearestArrival_ReturnSortedByNextArrival() {
         List<Travel> travels =
-            routeService.getRoutesByStop(stop1, TravelSortOption.NEAREST_ARRIVAL);
+            routeService.getRoutesByStop("Stop1", TravelSortOption.NEAREST_ARRIVAL);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getNextArrival()).isBefore(travels.get(1).getNextArrival());
@@ -91,7 +92,7 @@ class RouteServiceImplTest {
     @Test
     void getRoutesByStops_TimeInRoute_ReturnSortedByTimeInRoute() {
         List<Travel> travels =
-            routeService.getRoutesByStops(stop1, stop2, TravelSortOption.TIME_IN_ROUTE);
+            routeService.getRoutesByStops("Stop1", "Stop2", TravelSortOption.TIME_IN_ROUTE);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getTimeInRoute()).isLessThan(travels.get(1).getTimeInRoute());
@@ -100,7 +101,7 @@ class RouteServiceImplTest {
     @Test
     void getRoutesByStops_NearestArrival_ReturnSortedByNextArrival() {
         List<Travel> travels =
-            routeService.getRoutesByStops(stop1, stop2, TravelSortOption.NEAREST_ARRIVAL);
+            routeService.getRoutesByStops("Stop1", "Stop2", TravelSortOption.NEAREST_ARRIVAL);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getNextArrival()).isBefore(travels.get(1).getNextArrival());
@@ -111,6 +112,12 @@ class RouteServiceImplTest {
         Route route = routeService.getRouteByName("route1");
 
         assertThat(route).isNotNull().isEqualTo(route1);
+    }
+
+    @Test
+    void getRouteByName_NotFound_ThrowException() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+            () -> routeService.getRouteByName("nonexistent"));
     }
 
     @Test
@@ -137,27 +144,37 @@ class RouteServiceImplTest {
 
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
+        Route newRoute = Route.valueOf("route1_updated", "bus", stopsRoute1, Duration.ofMinutes(12),
+            businessHours);
 
-        Route oldRoute =
-            Route.valueOf("route1", "bus", stopsRoute1, Duration.ofMinutes(10), businessHours);
+        Route updatedRoute = routeService.updateRouteByName("route1", newRoute);
 
-        routeService.addRoute(oldRoute);
+        assertThat(updatedRoute).isNotNull().isEqualTo(newRoute);
+    }
 
-        Route newRoute =
-            Route.valueOf("route11", "bus", List.copyOf(stopsRoute1), Duration.ofMinutes(12),
-                businessHours);
+    @Test
+    void updateRouteByName_NotFound_ThrowException() {
+        Route newRoute = Route.valueOf("new", "bus",
+            List.of(RouteStop.valueOf(0, 1, stop1), RouteStop.valueOf(120, 2, stop2)),
+            Duration.ofMinutes(12),
+            BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0)));
 
-
-        Route updatedRoute = routeService.updateRouteByName(oldRoute, newRoute);
-        assertThat(updatedRoute).isNotNull().isNotEqualTo(oldRoute).isEqualTo(newRoute);
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+            () -> routeService.updateRouteByName("nonexistent", newRoute));
     }
 
     @Test
     void removeRoute() {
-        routeService.removeRoute(route1);
+        routeService.removeRoute("route1");
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
             () -> routeService.getRouteByName("route1"));
-        verify(routeService, times(1)).removeRoute(route1);
+        verify(routeService, times(1)).removeRoute("route1");
+    }
+
+    @Test
+    void removeRoute_NotFound_ThrowException() {
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+            () -> routeService.removeRoute("nonexistent"));
     }
 }

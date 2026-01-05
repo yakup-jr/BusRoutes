@@ -1,12 +1,12 @@
 package ru.teamscore.busroutes.model.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Route;
 import ru.teamscore.busroutes.model.models.RouteStop;
-import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.model.models.Travel;
 
 import java.time.Duration;
@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Service
 @AllArgsConstructor
 public class RouteServiceImpl implements RouteService {
     private final List<Route> routes;
@@ -26,127 +27,62 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public List<Travel> getRoutesByStop(Stop stop, TravelSortOption sort) {
-        if (sort == TravelSortOption.TIME_IN_ROUTE) {
+    public List<Travel> getRoutesByStop(String stopName, TravelSortOption sort) {
+        List<Travel> travels = routes.stream()
+            .filter(route -> route.getStops().stream()
+                .anyMatch(routeStop -> routeStop.getStop().getName().equals(stopName)))
+            .map(route -> createTravel(route, stopName))
+            .toList();
 
-            return routes.stream()
-                .filter(route ->
-                    route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(stop))
-                )
-                .sorted(Comparator.comparing(route ->
-                    route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(stop)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(stop.getName(), ItemType.STOP))
-                            .getArriveAtFromStart())))
-                ).map(route -> {
-                    Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(stop)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(stop.getName(), ItemType.STOP))
-                            .getArriveAtFromStart()));
-                    LocalTime arrivalTime =
-                        route.getBusinessHours().getStartAt();
-                    while (LocalTime.now().isAfter(arrivalTime)) {
-                        arrivalTime = arrivalTime.plus(route.getInterval());
-                    }
-                    return Travel.valueOf(route, timeInRoute, arrivalTime);
-                }).toList();
-        } else {
-            return routes.stream()
-                .filter(route ->
-                    route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(stop))
-                )
-                .map(route -> {
-                    Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(stop)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(stop.getName(), ItemType.STOP))
-                            .getArriveAtFromStart()));
-                    LocalTime arrivalTime =
-                        route.getBusinessHours().getStartAt();
-                    while (LocalTime.now().isAfter(arrivalTime)) {
-                        arrivalTime = arrivalTime.plus(route.getInterval());
-                    }
-                    return Travel.valueOf(route, timeInRoute, arrivalTime);
-                }).sorted(Comparator.comparing(Travel::getNextArrival)).toList();
-        }
+        return sort == TravelSortOption.TIME_IN_ROUTE
+            ? travels.stream().sorted(Comparator.comparing(Travel::getTimeInRoute)).toList()
+            : travels.stream().sorted(Comparator.comparing(Travel::getNextArrival)).toList();
     }
 
     @Override
-    public List<Travel> getRoutesByStops(Stop from, Stop to, TravelSortOption sort) {
-        if (sort == TravelSortOption.TIME_IN_ROUTE) {
-            return routes.stream()
-                .filter(route ->
-                    route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(from))
-                        && route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(to))
-                )
-                .sorted(Comparator.comparing(route ->
-                    route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(from)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(from.getName(), ItemType.STOP))
-                            .getArriveAtFromStart())))
-                ).map(route -> {
-                    Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(from)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(from.getName(), ItemType.STOP))
-                            .getArriveAtFromStart()));
-                    LocalTime arrivalTime =
-                        route.getBusinessHours().getStartAt();
-                    while (LocalTime.now().isAfter(arrivalTime)) {
-                        arrivalTime = arrivalTime.plus(route.getInterval());
-                    }
-                    return Travel.valueOf(route, timeInRoute, arrivalTime);
-                }).toList();
-        } else {
-            return routes.stream()
-                .filter(route ->
-                    route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(from))
-                        && route.getStops()
-                        .stream().anyMatch(routeStop -> routeStop.getStop().equals(to))
-                )
-                .map(route -> {
-                    Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(
-                        route.getStops().stream()
-                            .filter(routeStop -> routeStop.getStop().equals(from)).findFirst()
-                            .orElseThrow(() -> new NotFoundException(from.getName(), ItemType.STOP))
-                            .getArriveAtFromStart()));
-                    LocalTime arrivalTime =
-                        route.getBusinessHours().getStartAt();
-                    while (LocalTime.now().isAfter(arrivalTime)) {
-                        arrivalTime = arrivalTime.plus(route.getInterval());
-                    }
-                    return Travel.valueOf(route, timeInRoute, arrivalTime);
-                }).sorted(Comparator.comparing(Travel::getNextArrival)).toList();
+    public List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort) {
+        List<Travel> travels = routes.stream()
+            .filter(route -> route.getStops().stream()
+                .anyMatch(routeStop -> routeStop.getStop().getName().equals(fromStopName))
+                && route.getStops().stream()
+                .anyMatch(routeStop -> routeStop.getStop().getName().equals(toStopName)))
+            .map(route -> createTravel(route, fromStopName))
+            .toList();
+
+        return sort == TravelSortOption.TIME_IN_ROUTE
+            ? travels.stream().sorted(Comparator.comparing(Travel::getTimeInRoute)).toList()
+            : travels.stream().sorted(Comparator.comparing(Travel::getNextArrival)).toList();
+    }
+
+    private Travel createTravel(Route route, String stopName) {
+        RouteStop routeStop = route.getStops().stream()
+            .filter(rs -> rs.getStop().getName().equals(stopName))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException(stopName, ItemType.STOP));
+
+        Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(routeStop.getArriveAtFromStart()));
+        LocalTime arrivalTime = route.getBusinessHours().getStartAt();
+        while (LocalTime.now().isAfter(arrivalTime)) {
+            arrivalTime = arrivalTime.plus(route.getInterval());
         }
+        return Travel.valueOf(route, timeInRoute, arrivalTime);
     }
 
     @Override
     public Route getRouteByName(String name) {
-        for (Route route : routes) {
-            if (route.getName().equals(name)) {
-                return route;
-            }
-        }
-        throw new NotFoundException(name, ItemType.ROUTE);
+        return routes.stream()
+            .filter(route -> route.getName().equals(name))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
     }
 
     @Override
     public Route copyRoute(Route route, boolean isReverseOrder) {
         if (isReverseOrder) {
             List<RouteStop> reversedStops = new ArrayList<>();
-
             for (int i = route.getStops().size() - 1; i > -1; i--) {
                 reversedStops.add(route.getStops().get(i));
             }
-
             return Route.valueOf(route.getName(), route.getType(), reversedStops,
                 route.getInterval(), route.getBusinessHours());
         }
@@ -155,17 +91,16 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public Route updateRouteByName(Route oldRoute, Route newRoute) {
-        if (!routes.contains(oldRoute)) {
-            throw new NotFoundException(oldRoute.getName(), ItemType.ROUTE);
-        }
-        int index = routes.indexOf(oldRoute);
+    public Route updateRouteByName(String oldRouteName, Route newRoute) {
+        int index = routes.indexOf(getRouteByName(oldRouteName));
         routes.set(index, newRoute);
         return routes.get(index);
     }
 
     @Override
-    public void removeRoute(Route removeRoute) {
-        routes.remove(removeRoute);
+    public void removeRoute(String routeName) {
+        Route route = getRouteByName(routeName);
+
+        routes.remove(route);
     }
 }
