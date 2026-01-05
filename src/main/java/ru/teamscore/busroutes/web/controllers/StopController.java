@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.web.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ public class StopController {
     private final StopService stopService;
 
     @PostMapping("/stop")
-    public ResponseEntity<Stop> addStop(@RequestBody Stop newStop) {
+    public ResponseEntity<Stop> addStop(@RequestBody @Valid Stop newStop) {
         return ResponseEntity.status(HttpStatus.CREATED).body(stopService.addStop(newStop));
     }
 

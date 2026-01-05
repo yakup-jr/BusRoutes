@@ -17,36 +17,32 @@ public class StopServiceImpl implements StopService {
 
     @Override
     public Stop addStop(Stop stop) {
+        if (stops.contains(stop)) {
+            throw new IllegalArgumentException("Stop already exists");
+        }
         stops.add(stop);
         return stop;
     }
 
     @Override
     public Stop getStopByName(String name) {
-        for (Stop stop : stops) {
-            if (stop.getName().equals(name)) {
-                return stop;
-            }
-        }
-        throw new NotFoundException(name, ItemType.STOP);
+        return stops.stream()
+            .filter(stop -> stop.getName().equals(name))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
+
     }
 
     @Override
-    public Stop updateStopByName(String name, Stop stop) {
-        for (int i = 0; i < stops.size(); i++) {
-            if (stops.get(i).getName().equals(name)) {
-                stops.set(i, stop);
-                return stop;
-            }
-        }
-        throw new NotFoundException(name, ItemType.STOP);
+    public Stop updateStopByName(String oldName, Stop stop) {
+        int index = stops.indexOf(getStopByName(oldName));
+        stops.set(index, stop);
+        return stops.get(index);
     }
 
     @Override
     public void removeStopByName(String name) {
-        if (getStopByName(name) == null) {
-            throw new NotFoundException(name, ItemType.STOP);
-        }
-        stops.removeIf(stop -> stop.getName().equals(name));
+        Stop stop = getStopByName(name);
+        stops.remove(stop);
     }
 }

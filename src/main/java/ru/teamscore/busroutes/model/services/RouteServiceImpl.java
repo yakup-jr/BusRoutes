@@ -12,6 +12,7 @@ import ru.teamscore.busroutes.model.models.Travel;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -22,6 +23,9 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     public Route addRoute(Route route) {
+        if (routes.contains(route)) {
+            throw new IllegalArgumentException("Route already exists");
+        }
         routes.add(route);
         return route;
     }
@@ -34,13 +38,12 @@ public class RouteServiceImpl implements RouteService {
             .map(route -> createTravel(route, stopName))
             .toList();
 
-        return sort == TravelSortOption.TIME_IN_ROUTE
-            ? travels.stream().sorted(Comparator.comparing(Travel::getTimeInRoute)).toList()
-            : travels.stream().sorted(Comparator.comparing(Travel::getNextArrival)).toList();
+        return sortTravels(travels, sort);
     }
 
     @Override
-    public List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort) {
+    public List<Travel> getRoutesByStops(String fromStopName, String toStopName,
+                                         TravelSortOption sort) {
         List<Travel> travels = routes.stream()
             .filter(route -> route.getStops().stream()
                 .anyMatch(routeStop -> routeStop.getStop().getName().equals(fromStopName))
@@ -49,9 +52,7 @@ public class RouteServiceImpl implements RouteService {
             .map(route -> createTravel(route, fromStopName))
             .toList();
 
-        return sort == TravelSortOption.TIME_IN_ROUTE
-            ? travels.stream().sorted(Comparator.comparing(Travel::getTimeInRoute)).toList()
-            : travels.stream().sorted(Comparator.comparing(Travel::getNextArrival)).toList();
+        return sortTravels(travels, sort);
     }
 
     private Travel createTravel(Route route, String stopName) {
@@ -60,12 +61,20 @@ public class RouteServiceImpl implements RouteService {
             .findFirst()
             .orElseThrow(() -> new NotFoundException(stopName, ItemType.STOP));
 
-        Duration timeInRoute = route.getInterval().minus(Duration.ofSeconds(routeStop.getArriveAtFromStart()));
+        Duration timeInRoute =
+            route.getInterval().minus(Duration.ofSeconds(routeStop.getArriveAtFromStart()));
         LocalTime arrivalTime = route.getBusinessHours().getStartAt();
         while (LocalTime.now().isAfter(arrivalTime)) {
             arrivalTime = arrivalTime.plus(route.getInterval());
         }
+
         return Travel.valueOf(route, timeInRoute, arrivalTime);
+    }
+
+    private List<Travel> sortTravels(List<Travel> travels, TravelSortOption sort) {
+        return sort == TravelSortOption.TIME_IN_ROUTE
+            ? travels.stream().sorted(Comparator.comparing(Travel::getTimeInRoute)).toList()
+            : travels.stream().sorted(Comparator.comparing(Travel::getNextArrival)).toList();
     }
 
     @Override
@@ -79,10 +88,9 @@ public class RouteServiceImpl implements RouteService {
     @Override
     public Route copyRoute(Route route, boolean isReverseOrder) {
         if (isReverseOrder) {
-            List<RouteStop> reversedStops = new ArrayList<>();
-            for (int i = route.getStops().size() - 1; i > -1; i--) {
-                reversedStops.add(route.getStops().get(i));
-            }
+            List<RouteStop> reversedStops = new ArrayList<>(route.getStops());
+            Collections.reverse(reversedStops);
+
             return Route.valueOf(route.getName(), route.getType(), reversedStops,
                 route.getInterval(), route.getBusinessHours());
         }
@@ -100,7 +108,6 @@ public class RouteServiceImpl implements RouteService {
     @Override
     public void removeRoute(String routeName) {
         Route route = getRouteByName(routeName);
-
         routes.remove(route);
     }
 }

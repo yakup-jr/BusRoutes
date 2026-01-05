@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@EqualsAndHashCode
 @Getter
+@EqualsAndHashCode
 public class RouteStop {
 
     private final int arriveAtFromStart;
