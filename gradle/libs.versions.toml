@@ -1,0 +1,15 @@
+[versions]
+springBoot = "4.0.1"
+springDependencyManagement = "1.1.7"
+jakartaValidation = "3.1.1"
+assertj = "3.27.6"
+mockito = "5.21.0"
+
+[plugins]
+springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
+springDependencyManagement = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+
+[libraries]
+jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakartaValidation" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
