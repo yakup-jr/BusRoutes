@@ -13,9 +13,11 @@ public interface RouteService {
 
     List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort);
 
+    boolean isStopInUse(String stopName);
+
     Route getRouteByName(String name);
 
-    Route copyRoute(Route route, boolean isReverseOrder);
+    Route copyRoute(String routeName, boolean isReverseOrder);
 
     Route updateRouteByName(String oldRouteName, Route newRoute);
 

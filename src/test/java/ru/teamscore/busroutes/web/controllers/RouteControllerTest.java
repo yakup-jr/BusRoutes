@@ -46,7 +46,8 @@ class RouteControllerTest {
         stop2 = Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
 
         List<RouteStop> stopsRoute1 =
-            List.of(RouteStop.valueOf(0, 1, stop1), RouteStop.valueOf(120, 2, stop2));
+            List.of(RouteStop.valueOf(0, 1, stop1.getName()),
+                RouteStop.valueOf(120, 2, stop2.getName()));
 
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
@@ -66,11 +67,10 @@ class RouteControllerTest {
 
     @Test
     void copyRoute_ReturnCreated() throws Exception {
-        when(routeService.copyRoute(any(Route.class), eq(true))).thenReturn(route1);
+        when(routeService.copyRoute(any(String.class), eq(true))).thenReturn(route1);
 
-        mockMvc.perform(post("/api/v1/route/copy").param("isReverseOrder", "true")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(route1))).andExpect(status().isCreated())
+        mockMvc.perform(post("/api/v1/route/route1/copy").param("isReverseOrder", "true")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.name").value("route1"));
     }
 

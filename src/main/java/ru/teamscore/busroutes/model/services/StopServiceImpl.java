@@ -1,19 +1,17 @@
 package ru.teamscore.busroutes.model.services;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
 
-import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
+@AllArgsConstructor
 public class StopServiceImpl implements StopService {
-    private final List<Stop> stops;
-
-    public StopServiceImpl(List<Stop> stops) {
-        this.stops = stops;
-    }
+    private final CopyOnWriteArrayList<Stop> stops;
 
     @Override
     public Stop addStop(Stop stop) {
@@ -31,6 +29,11 @@ public class StopServiceImpl implements StopService {
             .findFirst()
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
 
+    }
+
+    @Override
+    public boolean containsStop(String stopName) {
+        return stops.stream().anyMatch(stop -> stop.getName().equals(stopName));
     }
 
     @Override

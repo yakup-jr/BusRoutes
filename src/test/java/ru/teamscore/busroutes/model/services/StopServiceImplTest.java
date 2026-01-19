@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
 
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -21,7 +21,7 @@ class StopServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ArrayList<Stop> stops = new ArrayList<>();
+        CopyOnWriteArrayList<Stop> stops = new CopyOnWriteArrayList<>();
         stopService = Mockito.spy(new StopServiceImpl(stops));
     }
 
@@ -37,6 +37,15 @@ class StopServiceImplTest {
     }
 
     @Test
+    void addStop_StopAlreadyExists_ThrowIllegalArgumentException() {
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        stopService.addStop(stop);
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+            () -> stopService.addStop(stop));
+    }
+
+    @Test
     void getStopByName() {
         Stop stop = Stop.valueOf("Ulyanovskaya Street",
             Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
@@ -46,6 +55,24 @@ class StopServiceImplTest {
 
         assertThat(foundStop).isEqualTo(stop);
         verify(stopService, times(1)).getStopByName("Ulyanovskaya Street");
+    }
+
+    @Test
+    void containsStop_ReturnTrue() {
+        Stop stop = Stop.valueOf("Ulyanovskaya Street",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        stopService.addStop(stop);
+
+        boolean stop1 = stopService.containsStop(stop.getName());
+
+        assertThat(stop1).isTrue();
+    }
+
+    @Test
+    void containsStop_ReturnFalse() {
+        boolean containsStop = stopService.containsStop("Stop1");
+
+        assertThat(containsStop).isFalse();
     }
 
     @Test

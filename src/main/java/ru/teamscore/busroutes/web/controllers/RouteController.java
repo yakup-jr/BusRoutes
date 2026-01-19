@@ -23,11 +23,11 @@ public class RouteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(routeService.addRoute(newRoute));
     }
 
-    @PostMapping("/route/copy")
-    public ResponseEntity<Route> copyRoute(@RequestBody @Valid Route route,
-                                           @RequestParam boolean isReverseOrder) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(routeService.copyRoute(route,
-            isReverseOrder));
+    @PostMapping("/route/{routeName}/copy")
+    public ResponseEntity<Route> copyRoute(@RequestParam boolean isReverseOrder,
+                                           @PathVariable String routeName) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(routeService.copyRoute(routeName, isReverseOrder));
     }
 
     @GetMapping(value = "/route", params = {"stopName", "sort"})
@@ -54,8 +54,8 @@ public class RouteController {
     @PutMapping("/route/{name}")
     public ResponseEntity<Route> updateRouteByName(@PathVariable String name,
                                                    @RequestBody @Valid Route updatedRoute) {
-        return ResponseEntity.status(HttpStatus.OK).body(routeService.updateRouteByName(name,
-            updatedRoute));
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(routeService.updateRouteByName(name, updatedRoute));
     }
 
     @DeleteMapping("/route/{name}")

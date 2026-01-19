@@ -10,16 +10,16 @@ public class RouteStop {
 
     private final int arriveAtFromStart;
     private final int order;
-    private final Stop stop;
+    private final String stopName;
 
-    private RouteStop(int arriveAtFromStart, int order, Stop stop) {
+    private RouteStop(int arriveAtFromStart, int order, String stopName) {
         this.arriveAtFromStart = arriveAtFromStart;
         this.order = order;
-        this.stop = stop;
+        this.stopName = stopName;
     }
 
     @JsonCreator
-    public static RouteStop valueOf(int arriveAtFromStart, int order, Stop stop) {
+    public static RouteStop valueOf(int arriveAtFromStart, int order, String stop) {
         if (arriveAtFromStart < 0) {
             throw new IllegalArgumentException("Arrive at from start must be non-negative");
         }
