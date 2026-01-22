@@ -1,29 +1,32 @@
 package ru.teamscore.busroutes.model.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
+@Builder
 public class Stop {
     private final String name;
     private final GeographicCoordinates coordinates;
 
-    private Stop(String name, double latitude, double longitude) {
+    private Stop(String name, GeographicCoordinates coordinates) {
         this.name = name;
-        this.coordinates = new GeographicCoordinates(latitude, longitude);
+        this.coordinates = new GeographicCoordinates(coordinates.latitude, coordinates.longitude);
     }
 
     @JsonCreator
     public static Stop valueOf(
         String name, GeographicCoordinates coordinates
     ) {
-        return new Stop(name, coordinates.latitude, coordinates.longitude);
+        return new Stop(name, coordinates);
     }
 
     @Getter
     @EqualsAndHashCode
+    @Builder
     public static class GeographicCoordinates {
         private final double latitude;
         private final double longitude;

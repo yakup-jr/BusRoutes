@@ -1,0 +1,27 @@
+package ru.teamscore.busroutes.model.mapper;
+
+import org.mapstruct.*;
+import ru.teamscore.busroutes.data.entities.StopEntity;
+import ru.teamscore.busroutes.model.models.Stop;
+
+import static org.mapstruct.ReportingPolicy.WARN;
+
+
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy =
+    WARN, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT,
+    uses = GeographicCoordinatesMapper.class)
+public interface StopMapper {
+
+
+    @Mapping(source = "coordinates", target = "geographicCoordinates")
+    StopEntity map(Stop stop);
+
+    @Mapping(source = "geographicCoordinates", target = "coordinates")
+    Stop map(StopEntity stopEntity);
+
+    @ObjectFactory
+    default Stop createStop(StopEntity entity) {
+        return Stop.valueOf(entity.getName(), null);
+    }
+
+}
