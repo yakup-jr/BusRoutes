@@ -17,9 +17,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 class RouteTest {
-    private final Stop stop1 =
+    private static final Stop stop1 =
         Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-    private final Stop stop2 =
+    private static final Stop stop2 =
         Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
     private List<RouteStop> stopsRoute;
     private BusinessHours businessHours;
@@ -28,8 +28,8 @@ class RouteTest {
 
     @BeforeEach
     void setUp() {
-        stopsRoute = List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-            RouteStop.valueOf(120, 2, stop2.getName()));
+        stopsRoute = List.of(RouteStop.valueOf(0, 1, stop1),
+            RouteStop.valueOf(120, 2, stop2));
         businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
 
@@ -48,8 +48,8 @@ class RouteTest {
     }
 
     private static Stream<Arguments> provideValueOf() {
-        RouteStop s1 = RouteStop.valueOf(0, 0, "Stop1");
-        RouteStop s2 = RouteStop.valueOf(15, 1, "Stop2");
+        RouteStop s1 = RouteStop.valueOf(0, 0, stop1);
+        RouteStop s2 = RouteStop.valueOf(15, 1, stop2);
         List<RouteStop> validStops = List.of(s1, s2);
 
         Duration validInterval = Duration.ofMinutes(15);
@@ -79,7 +79,7 @@ class RouteTest {
     void addStop_ReturnNewStop() {
         Stop stop3 = Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050,
             50.108750));
-        RouteStop routeStop3 = RouteStop.valueOf(240, 3, stop3.getName());
+        RouteStop routeStop3 = RouteStop.valueOf(240, 3, stop3);
 
         Route updatedRoute = route.addStop(routeStop3);
 
@@ -95,7 +95,9 @@ class RouteTest {
 
     @Test
     void removeStop() {
-        RouteStop s3 = RouteStop.valueOf(240, 3, "Stop3");
+        Stop stop3 =
+            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
+        RouteStop s3 = RouteStop.valueOf(240, 3, stop3);
         Route longRoute = Route.valueOf("route1", "bus",
             List.of(stopsRoute.get(0), stopsRoute.get(1), s3),
             Duration.ofMinutes(10), businessHours);
@@ -104,7 +106,7 @@ class RouteTest {
 
         assertThat(updatedRoute.getStopsCount()).isEqualTo(2);
         assertThat(updatedRoute.getStops())
-            .extracting("stopName")
+            .extracting("stop").extracting("name")
             .containsExactly("Stop2", "Stop3");
     }
 
@@ -117,9 +119,11 @@ class RouteTest {
 
     @Test
     void reverseRoute_WithMultipleStops() {
-        RouteStop s1 = RouteStop.valueOf(0, 1, "A");
-        RouteStop s2 = RouteStop.valueOf(10, 2, "B");
-        RouteStop s3 = RouteStop.valueOf(25, 3, "C");
+        Stop stop3 =
+            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
+        RouteStop s1 = RouteStop.valueOf(0, 1, stop1);
+        RouteStop s2 = RouteStop.valueOf(10, 2, stop2);
+        RouteStop s3 = RouteStop.valueOf(25, 3, stop3);
 
         Route route2 = Route.valueOf("Route", "bus", List.of(s1, s2, s3),
             Duration.ofMinutes(10), businessHours);
@@ -127,12 +131,14 @@ class RouteTest {
         Route reversed = route2.reverseRoute();
 
         assertThat(reversed.getStops())
-            .extracting("stopName", "arriveAtFromStart", "order")
+            .extracting("arriveAtFromStart", "stopOrder")
             .containsExactly(
-                tuple("C", 0, 1),
-                tuple("B", 10, 2),
-                tuple("A", 25, 3)
+                tuple(0, 1),
+                tuple(10, 2),
+                tuple(25, 3)
             );
+        assertThat(reversed.getStops()).extracting("stop").extracting("name")
+            .containsExactly("Stop3", "Stop2", "Stop1");
     }
 
     @Test

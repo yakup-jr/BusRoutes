@@ -3,15 +3,22 @@ package ru.teamscore.busroutes.model.services;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
+import ru.teamscore.busroutes.data.entities.*;
+import ru.teamscore.busroutes.data.repositories.RouteRepository;
+import ru.teamscore.busroutes.data.repositories.StopRepository;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
+import ru.teamscore.busroutes.model.mapper.*;
 import ru.teamscore.busroutes.model.models.*;
 
 import java.time.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,153 +30,193 @@ class RouteServiceImplTest {
     private RouteService routeService;
     @Mock
     private StopService stopService;
+    @Mock
+    private StopRepository stopRepository;
+    @Mock
+    private RouteRepository routeRepository;
+    private RouteMapper mapper;
     private final Stop stop1 =
         Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
     private final Stop stop2 =
         Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
+    private StopEntity stopEntity1;
+    private StopEntity stopEntity2;
     private Route route1;
     private Route route2;
+    private RouteEntity routeEntity1;
+    private RouteEntity routeEntity2;
 
     @BeforeEach
     void setUp() {
-        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-            RouteStop.valueOf(120, 2, stop2.getName()));
+        List<RouteStop> stopsRoute1 =
+            List.of(RouteStop.valueOf(0, 1, stop1), RouteStop.valueOf(120, 2, stop2));
+        List<RouteStop> stopsRoute2 =
+            List.of(RouteStop.valueOf(0, 1, stop1), RouteStop.valueOf(60, 2, stop2));
 
-        List<RouteStop> stopsRoute2 = List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-            RouteStop.valueOf(60, 2, stop2.getName()));
 
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
 
-
         route1 = Route.valueOf("route1", "bus", stopsRoute1, Duration.ofMinutes(10), businessHours);
         route2 = Route.valueOf("route2", "bus", stopsRoute2, Duration.ofMinutes(15), businessHours);
 
+        stopEntity1 =
+            StopEntity.builder()
+                .name(stop1.getName())
+                .geographicCoordinates(
+                    GeographicCoordinatesEntity.builder()
+                        .latitude(stop1.getCoordinates().getLatitude())
+                        .longitude(stop1.getCoordinates().getLongitude())
+                        .build())
+                .build();
+
+        stopEntity2 =
+            StopEntity.builder()
+                .name(stop2.getName())
+                .geographicCoordinates(
+                    GeographicCoordinatesEntity.builder()
+                        .latitude(stop2.getCoordinates().getLatitude())
+                        .longitude(stop2.getCoordinates().getLongitude())
+                        .build())
+                .build();
+
+        routeEntity1 = RouteEntity.builder()
+            .name(route1.getName())
+            .type(route1.getType())
+            .interval(route1.getInterval())
+            .businessHours(
+                BusinessHoursEntity.builder()
+                    .startAt(route1.getBusinessHours().getStartAt())
+                    .endAt(route1.getBusinessHours().getEndAt())
+                    .build())
+            .stops(List.of(RouteStopEntity.builder().arriveAtFromStart(0).stopOrder(1)
+                    .stop(stopEntity1).build(),
+                RouteStopEntity.builder().arriveAtFromStart(120).stopOrder(2)
+                    .stop(stopEntity2).build())).build();
+        routeEntity2 = RouteEntity.builder()
+            .name(route2.getName())
+            .type(route2.getType())
+            .interval(route2.getInterval())
+            .businessHours(
+                BusinessHoursEntity.builder()
+                    .startAt(route2.getBusinessHours().getStartAt())
+                    .endAt(route2.getBusinessHours().getEndAt())
+                    .build())
+            .stops(List.of(RouteStopEntity.builder().arriveAtFromStart(0).stopOrder(1)
+                    .stop(stopEntity1).build(),
+                RouteStopEntity.builder().arriveAtFromStart(120).stopOrder(2)
+                    .stop(stopEntity2).build())).build();
+
+
+        GeographicCoordinatesMapper geographicCoordinatesMapper = Mappers.getMapper(
+            GeographicCoordinatesMapper.class);
+        StopMapper stopMapper = Mappers.getMapper(StopMapper.class);
+        RouteStopMapper routeStopMapper = Mappers.getMapper(RouteStopMapper.class);
+        BusinessHoursMapper businessHoursMapper = Mappers.getMapper(BusinessHoursMapper.class);
+        mapper = Mappers.getMapper(RouteMapper.class);
+
+        ReflectionTestUtils.setField(stopMapper, "geographicCoordinatesMapper",
+            geographicCoordinatesMapper);
+        ReflectionTestUtils.setField(routeStopMapper, "stopMapper", stopMapper);
+        ReflectionTestUtils.setField(mapper, "routeStopMapper", routeStopMapper);
+        ReflectionTestUtils.setField(mapper, "businessHoursMapper", businessHoursMapper);
+
         CopyOnWriteArrayList<Route> routes = new CopyOnWriteArrayList<>();
         routes.add(route1);
-        routes.add(route2);
         Instant instant = Instant.parse("2026-01-18T12:35:00Z");
         ZoneId zoneId = ZoneId.of("Europe/Samara");
 
         routeService =
-            Mockito.spy(new RouteServiceImpl(Clock.fixed(instant, zoneId), routes, stopService));
+            new RouteServiceImpl(Clock.fixed(instant, zoneId), routes, stopService, stopRepository,
+                routeRepository, mapper);
     }
 
     @Test
-    void addRoute_StopsExists_ReturnNewRoute() {
-        Stop stop3 =
-            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-        Stop stop4 =
-            Stop.valueOf("Stop4", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
+    void addRoute_StopsExists_ReturnRoute() {
+        List<String> stopNames = List.of(stop1.getName(), stop2.getName());
+        when(routeRepository.existsByName(route1.getName())).thenReturn(false);
+        when(stopRepository.findAllByNameIn(stopNames)).thenReturn(
+            List.of(stopEntity1, stopEntity2));
+        when(routeRepository.save(routeEntity1)).thenReturn(routeEntity1);
 
-        when(stopService.containsStop("Stop3")).thenReturn(true);
-        when(stopService.containsStop("Stop4")).thenReturn(true);
+        Route addedRoute = routeService.addRoute(route1);
 
+        assertThat(addedRoute).isNotNull().isEqualTo(route1);
 
-        List<RouteStop> stops = List.of(RouteStop.valueOf(0, 1, stop3.getName()),
-            RouteStop.valueOf(120, 2, stop4.getName()));
-
-        BusinessHours businessHours =
-            BusinessHours.valueOf(LocalTime.of(6, 30), LocalTime.of(0, 0));
-        Route newRoute =
-            Route.valueOf("route3", "bus", stops, Duration.ofSeconds(120), businessHours);
-
-        Route addedRoute = routeService.addRoute(newRoute);
-
-        assertThat(addedRoute).isNotNull().isEqualTo(newRoute);
-        verify(routeService, times(1)).addRoute(newRoute);
+        verify(routeRepository).existsByName(route1.getName());
+        verify(stopRepository).findAllByNameIn(stopNames);
+        verify(routeRepository).save(routeEntity1);
     }
 
     @Test
-    void addRoute_RouteAlreadyExists_ThrowIllegalArgumentException() {
-        Stop stop3 =
-            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-        Stop stop4 =
-            Stop.valueOf("Stop4", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
+    void addRoute_RouteAlreadyExists_ThrowException() {
+        when(routeRepository.existsByName(route1.getName())).thenReturn(true);
 
-        when(stopService.containsStop("Stop3")).thenReturn(true);
-        when(stopService.containsStop("Stop4")).thenReturn(true);
-
-
-        List<RouteStop> stops = List.of(RouteStop.valueOf(0, 1, stop3.getName()),
-            RouteStop.valueOf(120, 2, stop4.getName()));
-
-        BusinessHours businessHours =
-            BusinessHours.valueOf(LocalTime.of(6, 30), LocalTime.of(0, 0));
-        Route newRoute =
-            Route.valueOf("route3", "bus", stops, Duration.ofSeconds(120), businessHours);
-
-        routeService.addRoute(newRoute);
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-            () -> routeService.addRoute(newRoute));
+            () -> routeService.addRoute(route1));
     }
 
     @Test
-    void addRoute_StopsNotExists_ThrowNotFoundException() {
-        Stop stop3 =
-            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-        Stop stop4 =
-            Stop.valueOf("Stop4", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
-
-        when(stopService.containsStop("Stop3")).thenReturn(false);
-
-        List<RouteStop> stops = List.of(RouteStop.valueOf(0, 1, stop3.getName()),
-            RouteStop.valueOf(120, 2, stop4.getName()));
-
-        BusinessHours businessHours =
-            BusinessHours.valueOf(LocalTime.of(6, 30), LocalTime.of(0, 0));
-        Route newRoute =
-            Route.valueOf("route3", "bus", stops, Duration.ofSeconds(120), businessHours);
+    void addRoute_StopsNotExists_ThrowException() {
+        List<String> stopNames = List.of(stop1.getName(), stop2.getName());
+        when(routeRepository.existsByName(route1.getName())).thenReturn(false);
+        when(stopRepository.findAllByNameIn(stopNames)).thenReturn(
+            List.of(stopEntity1));
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.addRoute(newRoute));
+            () -> routeService.addRoute(route1));
     }
 
     @Test
     void getRoutesByStop_TimeInRoute_ReturnSortedByTimeInRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
+        when(routeRepository.findRoutesByStop(stop1.getName())).thenReturn(List.of(routeEntity1,
+            routeEntity2));
 
         List<Travel> travels =
-            routeService.getRoutesByStop("Stop1", TravelSortOption.TIME_IN_ROUTE);
+            routeService.getRoutesByStop(stop1.getName(), TravelSortOption.TIME_IN_ROUTE);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getTimeInRoute()).isLessThan(travels.get(1).getTimeInRoute());
     }
 
     @Test
-    void getRoutesByStop_TimeInRoute_StopNotExists_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+    void getRoutesByStop_TimeInRoute_StopNotExists_ThrowException() {
+        when(routeRepository.findRoutesByStop(stop1.getName())).thenThrow(
+            DataIntegrityViolationException.class);
 
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRoutesByStop("Stop1", TravelSortOption.TIME_IN_ROUTE));
+        assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            () -> routeService.getRoutesByStop(stop1.getName(), TravelSortOption.TIME_IN_ROUTE));
     }
 
     @Test
     void getRoutesByStop_NearestArrival_ReturnSortedByNextArrival() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
+        when(routeRepository.findRoutesByStop(stop1.getName())).thenReturn(List.of(routeEntity1,
+            routeEntity2));
 
         List<Travel> travels =
-            routeService.getRoutesByStop("Stop1", TravelSortOption.NEAREST_ARRIVAL);
+            routeService.getRoutesByStop(stop1.getName(), TravelSortOption.NEAREST_ARRIVAL);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getNextArrival()).isBefore(travels.get(1).getNextArrival());
     }
 
     @Test
-    void getRoutesByStop_NearestArrival_StopNotExists_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+    void getRoutesByStop_NearestArrival_StopNotExists_ThrowException() {
+        when(routeRepository.findRoutesByStop(stop1.getName())).thenThrow(
+            DataIntegrityViolationException.class);
 
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRoutesByStop("Stop1", TravelSortOption.NEAREST_ARRIVAL));
+        assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            () -> routeService.getRoutesByStop(stop1.getName(), TravelSortOption.NEAREST_ARRIVAL));
     }
 
     @Test
     void getRoutesByStops_TimeInRoute_ReturnSortedByTimeInRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
+        when(routeRepository.findRoutesByBothStops(stop1.getName(), stop2.getName())).thenReturn(
+            List.of(routeEntity1, routeEntity2));
 
         List<Travel> travels =
-            routeService.getRoutesByStops("Stop1", "Stop2", TravelSortOption.TIME_IN_ROUTE);
+            routeService.getRoutesByStops(stop1.getName(), stop2.getName(),
+                TravelSortOption.TIME_IN_ROUTE);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getTimeInRoute()).isLessThan(travels.get(1).getTimeInRoute());
@@ -177,12 +224,12 @@ class RouteServiceImplTest {
 
     @Test
     void getRoutesByStops_NearestArrival_ReturnSortedByNextArrival() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
-
+        when(routeRepository.findRoutesByBothStops(stop1.getName(), stop2.getName())).thenReturn(
+            List.of(routeEntity1, routeEntity2));
 
         List<Travel> travels =
-            routeService.getRoutesByStops("Stop1", "Stop2", TravelSortOption.NEAREST_ARRIVAL);
+            routeService.getRoutesByStops(stop1.getName(), stop2.getName(),
+                TravelSortOption.NEAREST_ARRIVAL);
 
         assertThat(travels).hasSize(2);
         assertThat(travels.get(0).getNextArrival()).isBefore(travels.get(1).getNextArrival());
@@ -190,10 +237,11 @@ class RouteServiceImplTest {
 
     @Test
     void getRoutesByStops_NearestArrival_StopNotExists_ReturnSortedByNextArrival() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+        when(routeRepository.findRoutesByBothStops(stop1.getName(), stop2.getName())).thenThrow(
+            DataIntegrityViolationException.class);
 
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRoutesByStops("Stop1", "Stop2",
+        assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            () -> routeService.getRoutesByStops(stop1.getName(), stop2.getName(),
                 TravelSortOption.NEAREST_ARRIVAL));
     }
 
@@ -225,71 +273,82 @@ class RouteServiceImplTest {
 
     @Test
     void getRouteByName_ReturnRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
 
-        Route route = routeService.getRouteByName("route1");
+        Route route = routeService.getRouteByName(route1.getName());
 
         assertThat(route).isNotNull().isEqualTo(route1);
     }
 
     @Test
-    void getRouteByName_StopNotExists_ReturnRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+    void getRouteByName_RouteNotExists_ThrowException() {
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.empty());
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRouteByName("route1"));
-    }
-
-    @Test
-    void getRouteByName_NotFound_ThrowException() {
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRouteByName("nonexistent"));
+            () -> routeService.getRouteByName(route1.getName()));
     }
 
     @Test
     void copyRoute_ReverseOrder_ReturnRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
+        //todo: think about impl copyRoute cause double check that route not exists and in first
+        // case get route in the second check only exists by name. The first use getRouteByName
+        // with routeRepository.findByName and the second use addRoute with routeRepository
+        // .existsByName
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(routeRepository.existsByName(String.format("%s_copy", route1.getName()))).thenReturn(
+            false);
+        when(stopRepository.findAllByNameIn(List.of(stop2.getName(), stop1.getName()))).thenReturn(
+            List.of(stopEntity1, stopEntity2));
+        when(routeRepository.save(any(RouteEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        Route route = routeService.copyRoute(route1.getName(), true);
+        Route route = routeService.copyRoute(this.route1.getName(), true);
 
-        RouteStop reverseStop1 = RouteStop.valueOf(0, 1, "Stop2");
-        RouteStop reverseStop2 = RouteStop.valueOf(120, 2, "Stop1");
+        RouteStop reverseStop1 = RouteStop.valueOf(0, 1, stop2);
+        RouteStop reverseStop2 = RouteStop.valueOf(120, 2, stop1);
 
-
-        assertThat(route).isNotNull().isNotEqualTo(route1);
+        assertThat(route).isNotNull().isNotEqualTo(this.route1);
         assertThat(route.getStops()).hasSize(2);
         assertThat(route.getStops()).element(0).isEqualTo(reverseStop1);
         assertThat(route.getStops()).element(1).isEqualTo(reverseStop2);
     }
 
     @Test
-    void copyRoute_ReverseOrder_StopNotExists_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+    void copyRoute_ReverseOrder_StopNotExists_ThrowException() {
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(routeRepository.existsByName(String.format("%s_copy", route1.getName()))).thenReturn(
+            false);
+        when(stopRepository.findAllByNameIn(List.of(stop2.getName(), stop1.getName()))).thenReturn(
+            List.of(stopEntity1));
 
-        String name = route1.getName();
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.copyRoute(name, true));
+            () -> routeService.copyRoute(route1.getName(), true));
     }
 
     @Test
     void copyRoute_NotReverseOrder_ReturnRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(routeRepository.existsByName(String.format("%s_copy", route1.getName()))).thenReturn(
+            false);
+        when(stopRepository.findAllByNameIn(List.of(stop1.getName(), stop2.getName()))).thenReturn(
+            List.of(stopEntity1, stopEntity2));
+        when(routeRepository.save(any(RouteEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        Route route = routeService.copyRoute(route1.getName(), false);
+        Route route = routeService.copyRoute(this.route1.getName(), false);
 
-        assertThat(route.getStops()).isEqualTo(route1.getStops());
-        assertThat(route.getBusinessHours()).isEqualTo(route1.getBusinessHours());
-        assertThat(route.getInterval()).isEqualTo(route1.getInterval());
-        assertThat(route.getType()).isEqualTo(route1.getType());
-        assertThat(route.getName()).isNotEqualTo(route1.getName());
+        assertThat(route.getStops()).isEqualTo(this.route1.getStops());
+        assertThat(route.getBusinessHours()).isEqualTo(this.route1.getBusinessHours());
+        assertThat(route.getInterval()).isEqualTo(this.route1.getInterval());
+        assertThat(route.getType()).isEqualTo(this.route1.getType());
+        assertThat(route.getName()).isNotEqualTo(this.route1.getName());
     }
 
     @Test
-    void copyRoute_NotReverseOrder_StopNotExists_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+    void copyRoute_NotReverseOrder_StopNotExists_ThrowException() {
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(routeRepository.existsByName(String.format("%s_copy", route1.getName()))).thenReturn(
+            false);
+        when(stopRepository.findAllByNameIn(List.of(stop1.getName(), stop2.getName()))).thenReturn(
+            List.of(stopEntity1));
 
         String name = route1.getName();
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
@@ -298,16 +357,17 @@ class RouteServiceImplTest {
 
     @Test
     void updateRouteByName_ReturnUpdatedRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
-
-        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-            RouteStop.valueOf(120, 2, stop2.getName()));
-
+        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(0, 1, stop1),
+            RouteStop.valueOf(120, 2, stop2));
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
         Route newRoute = Route.valueOf("route1_updated", "bus", stopsRoute1, Duration.ofMinutes(12),
             businessHours);
+
+        when(routeRepository.existsByName(newRoute.getName())).thenReturn(false);
+        when(routeRepository.existsByName("route1")).thenReturn(true);
+        when(stopRepository.findAllByNameIn(any(List.class))).thenReturn(stopsRoute1);
+        when(routeRepository.save(any(RouteEntity.class))).thenAnswer(i -> i.getArgument(0));
 
         Route updatedRoute = routeService.updateRouteByName("route1", newRoute);
 
@@ -316,21 +376,23 @@ class RouteServiceImplTest {
 
     @Test
     void updateRouteByName_NewRouteAlreadyExists_ThrowIllegalArgumentException() {
+        when(routeRepository.existsByName(any(String.class))).thenReturn(true);
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
             () -> routeService.updateRouteByName("route1", route1));
     }
 
     @Test
     void updateRouteByName_StopNotFound_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
-
-        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-            RouteStop.valueOf(120, 2, stop2.getName()));
-
+        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(0, 1, stop1),
+            RouteStop.valueOf(120, 2, stop2));
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
         Route newRoute = Route.valueOf("route1_updated", "bus", stopsRoute1, Duration.ofMinutes(12),
             businessHours);
+
+        when(routeRepository.existsByName(newRoute.getName())).thenReturn(false);
+        when(routeRepository.existsByName("route1")).thenReturn(true);
+        when(stopRepository.findAllByNameIn(any(List.class))).thenReturn(List.of());
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
             () -> routeService.updateRouteByName("route1", newRoute));
@@ -338,38 +400,41 @@ class RouteServiceImplTest {
 
     @Test
     void updateRouteByName_NotFound_ThrowNotFoundException() {
-        Route newRoute = Route.valueOf("new", "bus",
-            List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-                RouteStop.valueOf(120, 2, stop2.getName())), Duration.ofMinutes(12),
-            BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0)));
+        when(routeRepository.existsByName(any(String.class))).thenReturn(false);
+        when(routeRepository.existsByName("nonexistent")).thenReturn(false);
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.updateRouteByName("nonexistent", newRoute));
+            () -> routeService.updateRouteByName("nonexistent", route1));
     }
 
     @Test
     void removeRoute() {
-        when(stopService.containsStop("Stop1")).thenReturn(true);
-        when(stopService.containsStop("Stop2")).thenReturn(true);
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(stopRepository.findAllByNameIn(List.of(stop1.getName(), stop2.getName()))).thenReturn(
+            List.of(stopEntity1, stopEntity2));
 
-        routeService.removeRoute("route1");
+        routeService.removeRoute(route1.getName());
 
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.getRouteByName("route1"));
-        verify(routeService, times(1)).removeRoute("route1");
+        verify(routeRepository).findByName(route1.getName());
+        verify(stopRepository).findAllByNameIn(List.of(stop1.getName(), stop2.getName()));
+        verify(routeRepository).deleteByName(route1.getName());
     }
 
     @Test
     void removeRoute_StopNotExists_ThrowNotFoundException() {
-        when(stopService.containsStop("Stop1")).thenReturn(false);
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.of(routeEntity1));
+        when(stopRepository.findAllByNameIn(List.of(stop1.getName(), stop2.getName()))).thenReturn(
+            List.of(stopEntity1));
 
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.removeRoute("route1"));
+            () -> routeService.removeRoute(route1.getName()));
     }
 
     @Test
-    void removeRoute_NotFound_ThrowNotFoundException() {
+    void removeRoute_RouteNotFound_ThrowNotFoundException() {
+        when(routeRepository.findByName(route1.getName())).thenReturn(Optional.empty());
+
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> routeService.removeRoute("nonexistent"));
+            () -> routeService.removeRoute(route1.getName()));
     }
 }

@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.model.models;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -7,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 
 @Getter
+@EqualsAndHashCode
 public class Travel {
 
     private final Route route;
