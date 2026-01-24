@@ -9,7 +9,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import ru.teamscore.busroutes.data.entities.GeographicCoordinatesEntity;
 import ru.teamscore.busroutes.data.entities.StopEntity;
+import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
+import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.GeographicCoordinatesMapper;
 import ru.teamscore.busroutes.model.mapper.StopMapper;
@@ -26,6 +28,8 @@ import static org.mockito.Mockito.*;
 class StopServiceImplTest {
     @Mock
     private StopRepository stopRepository;
+    @Mock
+    private RouteRepository routeRepository;
     private StopServiceImpl stopService;
     private final Stop stopModel = Stop.valueOf("Ulyanovskaya Street",
         Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
@@ -47,7 +51,7 @@ class StopServiceImplTest {
 
         ReflectionTestUtils.setField(mapper, "geographicCoordinatesMapper", coordsMapper);
 
-        stopService = new StopServiceImpl(stopRepository, mapper);
+        stopService = new StopServiceImpl(stopRepository, routeRepository, mapper);
     }
 
     @Test
@@ -64,9 +68,9 @@ class StopServiceImplTest {
     }
 
     @Test
-    void addStop_StopAlreadyExists_ThrowIllegalArgumentException() {
+    void addStop_StopAlreadyExists_ThrowException() {
         when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+        assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
             () -> stopService.addStop(stopModel));
 
         verify(stopRepository).existsByName(stopModel.getName());
@@ -81,26 +85,6 @@ class StopServiceImplTest {
 
         assertThat(foundStop).isEqualTo(stopModel);
         verify(stopRepository).findByName(stopModel.getName());
-    }
-
-    @Test
-    void containsStop_ReturnTrue() {
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
-
-        boolean stop1 = stopService.containsStop(stopModel.getName());
-
-        assertThat(stop1).isTrue();
-        verify(stopRepository).existsByName(stopModel.getName());
-    }
-
-    @Test
-    void containsStop_ReturnFalse() {
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(false);
-
-        boolean containsStop = stopService.containsStop(stopModel.getName());
-
-        assertThat(containsStop).isFalse();
-        verify(stopRepository).existsByName(stopModel.getName());
     }
 
     @Test
@@ -120,6 +104,7 @@ class StopServiceImplTest {
     @Test
     void removeStopByName() {
         when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
+        when(routeRepository.existsByStop(stopModel.getName())).thenReturn(false);
 
         stopService.removeStopByName(stopModel.getName());
 
@@ -128,4 +113,24 @@ class StopServiceImplTest {
             () -> stopService.getStopByName(name));
         verify(stopRepository).deleteByName(stopModel.getName());
     }
+
+    @Test
+    void removeStopByName_StopNotExists_ThrowException() {
+        String stopName = stopModel.getName();
+        when(stopRepository.existsByName(stopName)).thenReturn(false);
+
+        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+            () -> stopService.removeStopByName(stopName));
+    }
+
+    @Test
+    void removeStopByName_RouteContainStop_ThrowException() {
+        String stopName = stopModel.getName();
+        when(stopRepository.existsByName(stopName)).thenReturn(true);
+        when(routeRepository.existsByStop(stopName)).thenReturn(true);
+
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+            () -> stopService.removeStopByName(stopName));
+    }
+
 }

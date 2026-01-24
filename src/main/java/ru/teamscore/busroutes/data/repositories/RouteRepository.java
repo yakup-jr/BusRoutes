@@ -21,11 +21,14 @@ public interface RouteRepository extends JpaRepository<RouteEntity, UUID> {
     @Query("select r from RouteEntity r join r.stops rs where rs = :stopName")
     List<RouteEntity> findRoutesByStop(String stopName);
 
+    @Query("select count(r) from RouteEntity r join r.stops rs where rs.stop.name = :stopName")
+    boolean existsByStop(String stopName);
+
     @Query("select r from RouteEntity r join r.stops rs1 join r.stops rs2 where rs1.stop.name = " +
         ":stop1 and rs2.stop.name = :stop2")
     List<RouteEntity> findRoutesByBothStops(@Param("stop1") String stop1,
                                             @Param("stop2") String stop2);
+
     @Modifying
     void deleteByName(String name);
-
 }

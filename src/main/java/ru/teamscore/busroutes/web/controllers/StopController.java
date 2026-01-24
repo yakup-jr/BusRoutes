@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.teamscore.busroutes.model.models.Stop;
-import ru.teamscore.busroutes.model.services.RouteServiceFacade;
 import ru.teamscore.busroutes.model.services.StopService;
 
 @RestController
@@ -14,7 +13,6 @@ import ru.teamscore.busroutes.model.services.StopService;
 @RequiredArgsConstructor
 public class StopController {
     private final StopService stopService;
-    private final RouteServiceFacade routeServiceFacade;
 
     @PostMapping("/stop")
     public ResponseEntity<Stop> addStop(@RequestBody @Valid Stop newStop) {
@@ -35,7 +33,7 @@ public class StopController {
 
     @DeleteMapping("/stop/{name}")
     public ResponseEntity<Void> removeStopByName(@PathVariable String name) {
-        routeServiceFacade.removeStopWithCheck(name);
+        stopService.removeStopByName(name);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

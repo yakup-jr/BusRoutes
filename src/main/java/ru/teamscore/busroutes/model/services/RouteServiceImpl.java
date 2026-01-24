@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.RouteEntity;
-import ru.teamscore.busroutes.data.entities.StopEntity;
 import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
+import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.RouteMapper;
 import ru.teamscore.busroutes.model.models.Route;
@@ -20,15 +20,12 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.StreamSupport;
 
 @Service
 @AllArgsConstructor
 public class RouteServiceImpl implements RouteService {
     private final Clock clock;
-    private final CopyOnWriteArrayList<Route> oldRoutes;
-    private final StopService stopService;
     private final StopRepository stopRepository;
     private final RouteRepository routeRepository;
     private final RouteMapper mapper;
@@ -40,23 +37,20 @@ public class RouteServiceImpl implements RouteService {
             throw new IllegalArgumentException("Route already exists");
         }
 
-        List<String> stopNames =
-            StreamSupport.stream(route.getStops().spliterator(), false)
-                .map(routeStop -> routeStop.getStop().getName()).toList();
-        List<StopEntity> fetchedStops = stopRepository.findAllByNameIn(stopNames);
-        if (fetchedStops.size() != stopNames.size()) {
-            throw new NotFoundException("some stops not exists", ItemType.STOP);
-        }
+        validateStopsExists(route.getStops());
 
         RouteEntity mappedEntity = mapper.map(route);
         RouteEntity savedEntity = routeRepository.save(mappedEntity);
         return mapper.map(savedEntity);
     }
 
-    private void isStopExists(String stopName) {
-        if (!stopService.containsStop(stopName)) {
-            throw new NotFoundException(String.format("Stop with name %s not found", stopName),
-                ItemType.STOP);
+    private void validateStopsExists(Iterable<RouteStop> routeStops) {
+        List<String> stopNames = StreamSupport.stream(routeStops.spliterator(), false)
+            .map(routeStop -> routeStop.getStop().getName()).toList();
+
+        long stopsCount = stopRepository.countByNameIn(stopNames);
+        if (stopsCount != stopNames.size()) {
+            throw new NotFoundException("some stops not exists", ItemType.STOP);
         }
     }
 
@@ -80,12 +74,6 @@ public class RouteServiceImpl implements RouteService {
             routes.stream().map(route -> createTravel(route, fromStopName)).toList();
 
         return sortTravels(travels, sort);
-    }
-
-    @Override
-    public boolean isStopInUse(String stopName) {
-        isStopExists(stopName);
-        return oldRoutes.stream().anyMatch(route -> route.containsStop(stopName));
     }
 
     private Travel createTravel(Route route, String stopName) {
@@ -132,9 +120,10 @@ public class RouteServiceImpl implements RouteService {
         Route routeToCopy = getRouteByName(routeName);
         Route copiedRoute = isReverseOrder ? routeToCopy.reverseRoute() : routeToCopy;
 
+        String newName = String.format("%s_copy", copiedRoute.getName());
         Route copiedRouteWithUpdatedName =
-            Route.valueOf(String.format("%s_copy", copiedRoute.getName()), copiedRoute.getType(),
-                copiedRoute.getStops(), copiedRoute.getInterval(), copiedRoute.getBusinessHours());
+            Route.valueOf(newName, copiedRoute.getType(), copiedRoute.getStops(),
+                copiedRoute.getInterval(), copiedRoute.getBusinessHours());
 
         return addRoute(copiedRouteWithUpdatedName);
     }
@@ -142,39 +131,28 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public Route updateRouteByName(String oldRouteName, Route newRoute) {
-        if (routeRepository.existsByName(newRoute.getName())) {
-            throw new IllegalArgumentException("Route which you want to update already exists");
-        }
-        if (!routeRepository.existsByName(oldRouteName)) {
-            throw new NotFoundException(oldRouteName, ItemType.ROUTE);
+        if (!oldRouteName.equals(newRoute.getName()) &&
+            routeRepository.existsByName(newRoute.getName())) {
+            throw new AlreadyExistsException("Route name already exists");
         }
 
-        List<String> stopNames =
-            StreamSupport.stream(newRoute.getStops().spliterator(), false)
-                .map(routeStop -> routeStop.getStop().getName()).toList();
-        List<StopEntity> fetchedStops = stopRepository.findAllByNameIn(stopNames);
-        if (fetchedStops.size() != stopNames.size()) {
-            throw new NotFoundException("Some stop/stops not exists", ItemType.STOP);
-        }
+        RouteEntity oldRoute = routeRepository.findByName(oldRouteName)
+            .orElseThrow(() -> new NotFoundException(oldRouteName, ItemType.ROUTE));
+
+        validateStopsExists(newRoute.getStops());
 
         RouteEntity routeEntity = mapper.map(newRoute);
-        RouteEntity savedRouteEntity = routeRepository.save(routeEntity);
+        routeEntity.setId(oldRoute.getId());
 
+        RouteEntity savedRouteEntity = routeRepository.save(routeEntity);
         return mapper.map(savedRouteEntity);
     }
 
     @Override
     @Transactional
     public void removeRoute(String routeName) {
-        RouteEntity routeEntity = routeRepository.findByName(routeName)
-            .orElseThrow(() -> new NotFoundException(routeName, ItemType.ROUTE));
-
-        List<String> stopNames =
-            StreamSupport.stream(routeEntity.getStops().spliterator(), false)
-                .map(routeStop -> routeStop.getStop().getName()).toList();
-        List<StopEntity> fetchedStops = stopRepository.findAllByNameIn(stopNames);
-        if (fetchedStops.size() != stopNames.size()) {
-            throw new NotFoundException("Some stop/stops not exists", ItemType.STOP);
+        if (!routeRepository.existsByName(routeName)) {
+            throw new NotFoundException(routeName, ItemType.ROUTE);
         }
 
         routeRepository.deleteByName(routeName);

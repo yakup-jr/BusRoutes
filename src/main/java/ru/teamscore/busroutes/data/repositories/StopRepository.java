@@ -19,6 +19,8 @@ public interface StopRepository extends JpaRepository<StopEntity, UUID> {
 
     List<StopEntity> findAllByNameIn(Collection<String> names);
 
+    long countByNameIn(Collection<String> names);
+
     @Modifying
     void deleteByName(String name);
 

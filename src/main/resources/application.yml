@@ -1,3 +1,5 @@
 spring:
   application:
     name: "BusRoutes"
+  jpa:
+    open-in-view: false

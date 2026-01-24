@@ -9,7 +9,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
-import ru.teamscore.busroutes.model.services.RouteServiceFacade;
 import ru.teamscore.busroutes.model.services.StopService;
 import tools.jackson.databind.ObjectMapper;
 
@@ -30,8 +29,6 @@ class StopControllerTest {
 
     @MockitoBean
     private StopService stopService;
-    @MockitoBean
-    private RouteServiceFacade routeServiceFacade;
 
     @Test
     void addStop() throws Exception {
@@ -101,8 +98,8 @@ class StopControllerTest {
 
     @Test
     void removeStopByName_ReturnNotFound() throws Exception {
-        doThrow(new NotFoundException("NonExistingStop", ItemType.STOP)).when(routeServiceFacade)
-            .removeStopWithCheck("NonExistingStop");
+        doThrow(new NotFoundException("NonExistingStop", ItemType.STOP)).when(stopService)
+            .removeStopByName("NonExistingStop");
 
         mockMvc.perform(delete("/api/v1/stop/NonExistingStop")).andExpect(status().isNotFound())
             .andExpect(jsonPath("$").exists());

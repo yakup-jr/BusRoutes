@@ -13,8 +13,6 @@ public interface RouteService {
 
     List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort);
 
-    boolean isStopInUse(String stopName);
-
     Route getRouteByName(String name);
 
     Route copyRoute(String routeName, boolean isReverseOrder);

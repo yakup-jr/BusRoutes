@@ -4,8 +4,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.StopEntity;
+import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
 import ru.teamscore.busroutes.model.enums.ItemType;
+import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.StopMapper;
 import ru.teamscore.busroutes.model.models.Stop;
@@ -14,14 +16,14 @@ import ru.teamscore.busroutes.model.models.Stop;
 @AllArgsConstructor
 public class StopServiceImpl implements StopService {
     private final StopRepository stopRepository;
+    private final RouteRepository routeRepository;
     private final StopMapper mapper;
 
     @Override
     @Transactional
     public Stop addStop(Stop stop) {
         if (stopRepository.existsByName(stop.getName())) {
-            //todo: change to AlreadyExistsException
-            throw new IllegalArgumentException("Stop already exists");
+            throw new AlreadyExistsException("Stop already exists");
         }
 
         StopEntity mappedStopEntity = mapper.map(stop);
@@ -36,14 +38,6 @@ public class StopServiceImpl implements StopService {
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
 
         return mapper.map(foundStopEntity);
-    }
-
-    //todo: think about needing this method in interface, cause now it possible to inject
-    // repository instead of using this method
-    @Override
-    @Transactional(readOnly = true)
-    public boolean containsStop(String stopName) {
-        return stopRepository.existsByName(stopName);
     }
 
     @Override
@@ -63,6 +57,11 @@ public class StopServiceImpl implements StopService {
     public void removeStopByName(String name) {
         if (!stopRepository.existsByName(name)) {
             throw new NotFoundException(name, ItemType.STOP);
+        }
+        if (routeRepository.existsByStop(name)) {
+            throw new IllegalArgumentException(String.format(
+                "%s exists in route. You can't remove stop until it " +
+                    "hasn't relation with any route", name));
         }
         stopRepository.deleteByName(name);
     }
