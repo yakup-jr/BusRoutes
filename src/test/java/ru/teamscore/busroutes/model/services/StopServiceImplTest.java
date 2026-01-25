@@ -1,6 +1,7 @@
 package ru.teamscore.busroutes.model.services;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -33,20 +34,10 @@ class StopServiceImplTest {
     @Mock
     private RouteRepository routeRepository;
     private StopServiceImpl stopService;
-    private final CreateStopCommand createStopCommand = new CreateStopCommand("Ulyanovskaya " +
-        "Street", new CreateStopCommand.CreateGeographicCoordinatesCommand(53.198050, 50.108750));
-    private final Stop stopModel = Stop.valueOf("Ulyanovskaya Street",
-        Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-    private final StopEntity stopEntity =
-        StopEntity.builder()
-            .id(UUID.randomUUID())
-            .name(stopModel.getName())
-            .geographicCoordinates(
-                GeographicCoordinatesEntity.builder().id(UUID.randomUUID())
-                    .latitude(stopModel.getCoordinates().getLatitude())
-                    .longitude(stopModel.getCoordinates().getLongitude()).build())
-            .build();
 
+    private static final String STOP_NAME = "Ulyanovskaya Street";
+    private static final double LAT = 53.198050;
+    private static final double LON = 50.108750;
 
     @BeforeEach
     void setUp() {
@@ -59,86 +50,146 @@ class StopServiceImplTest {
         stopService = new StopServiceImpl(stopRepository, routeRepository, mapper);
     }
 
-    @Test
-    void addStop() {
-        when(stopRepository.existsByName(createStopCommand.name())).thenReturn(false);
-        when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
+    @Nested
+    class StopAddition {
+        @Test
+        void addStop() {
+            var command = createCreateCommand();
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
+            when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        Stop newStop = stopService.addStop(createStopCommand);
+            Stop result = stopService.addStop(command);
 
-        assertThat(newStop).isEqualTo(stopModel);
+            assertThat(result.getName()).isEqualTo(STOP_NAME);
+            assertThat(result.getCoordinates().getLatitude()).isEqualTo(LAT);
+            verify(stopRepository).save(any());
+        }
 
-        verify(stopRepository).existsByName(createStopCommand.name());
-        verify(stopRepository).save(any());
+        @Test
+        void addStop_StopAlreadyExists_ThrowException() {
+            var command = createCreateCommand();
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
+
+            assertThatExceptionOfType(AlreadyExistsException.class)
+                .isThrownBy(() -> stopService.addStop(command));
+        }
     }
 
-    @Test
-    void addStop_StopAlreadyExists_ThrowException() {
-        when(stopRepository.existsByName(createStopCommand.name())).thenReturn(true);
-        assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
-            () -> stopService.addStop(createStopCommand));
+    @Nested
+    class StopRetrieval {
 
-        verify(stopRepository).existsByName(stopModel.getName());
+        @Test
+        void getStopByName() {
+            StopEntity entity = createStopEntity();
+            when(stopRepository.findByName(STOP_NAME)).thenReturn(Optional.of(entity));
+
+            Stop result = stopService.getStopByName(STOP_NAME);
+
+            assertThat(result.getName()).isEqualTo(STOP_NAME);
+            assertThat(result.getCoordinates().getLatitude()).isEqualTo(LAT);
+        }
+
+        @Test
+        void getStopByName_StopNotExists_ThrowException() {
+            when(stopRepository.findByName(STOP_NAME)).thenReturn(Optional.empty());
+
+            assertThatExceptionOfType(NotFoundException.class)
+                .isThrownBy(() -> stopService.getStopByName(STOP_NAME));
+        }
     }
 
-    @Test
-    void getStopByName() {
-        when(stopRepository.findByName(stopModel.getName())).thenReturn(
-            Optional.ofNullable(stopEntity));
+    @Nested
+    class StopUpdate {
 
-        Stop foundStop = stopService.getStopByName(stopModel.getName());
+        @Test
+        void updateStopByName() {
+            String oldName = STOP_NAME;
+            String newName = "Ulyanovskaya Street 2";
+            double newLat = 54.198050;
+            double newLon = 51.108750;
 
-        assertThat(foundStop).isEqualTo(stopModel);
-        verify(stopRepository).findByName(stopModel.getName());
+            FullUpdateStopCommand command = new FullUpdateStopCommand(
+                newName,
+                new FullUpdateStopCommand.FullUpdateGeographicCommand(newLat, newLon)
+            );
+
+            when(stopRepository.existsByName(oldName)).thenReturn(true);
+            when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+            Stop result = stopService.updateStopByName(oldName, command);
+
+            assertThat(result.getName()).isEqualTo(newName);
+            assertThat(result.getCoordinates().getLatitude()).isEqualTo(newLat);
+            assertThat(result.getCoordinates().getLongitude()).isEqualTo(newLon);
+
+            verify(stopRepository).existsByName(oldName);
+            verify(stopRepository).save(any(StopEntity.class));
+        }
+
+        @Test
+        void updateStopByName_StopNotExists_ThrowException() {
+            FullUpdateStopCommand command = new FullUpdateStopCommand(
+                "Any Name",
+                new FullUpdateStopCommand.FullUpdateGeographicCommand(LAT, LON)
+            );
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
+
+            assertThatExceptionOfType(NotFoundException.class)
+                .isThrownBy(() -> stopService.updateStopByName(STOP_NAME, command));
+
+            verify(stopRepository, never()).save(any());
+        }
     }
 
-    @Test
-    void updateStopByName() {
-        FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("Ulyanovskaya " +
-            "Street 2", new FullUpdateStopCommand.FullUpdateGeographicCommand(54.198050,
-            51.108750));
-        Stop stopToUpdate = Stop.valueOf("Ulyanovskaya Street 2",
-            Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
-        when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
+    @Nested
+    class StopRemoval {
+        @Test
+        void removeStopByName() {
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
+            when(routeRepository.existsByStop(STOP_NAME)).thenReturn(false);
 
-        Stop updatedStop = stopService.updateStopByName(stopModel.getName(), fullUpdateStopCommand);
+            stopService.removeStopByName(STOP_NAME);
 
-        assertThat(updatedStop).isEqualTo(stopToUpdate);
-        verify(stopRepository).existsByName(stopModel.getName());
-        verify(stopRepository).save(any(StopEntity.class));
+            verify(stopRepository).deleteByName(STOP_NAME);
+        }
+
+        @Test
+        void removeStopByName_StopNotExists_ThrowException() {
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
+
+            assertThatExceptionOfType(NotFoundException.class)
+                .isThrownBy(() -> stopService.removeStopByName(STOP_NAME));
+
+            verify(stopRepository, never()).deleteByName(anyString());
+        }
+
+        @Test
+        void removeStopByName_RouteContainStop_ThrowException() {
+            when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
+            when(routeRepository.existsByStop(STOP_NAME)).thenReturn(true);
+
+            assertThatExceptionOfType(IllegalArgumentException.class)
+                .isThrownBy(() -> stopService.removeStopByName(STOP_NAME));
+
+            verify(stopRepository, never()).deleteByName(anyString());
+        }
     }
 
-    @Test
-    void removeStopByName() {
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
-        when(routeRepository.existsByStop(stopModel.getName())).thenReturn(false);
-
-        stopService.removeStopByName(stopModel.getName());
-
-        String name = stopModel.getName();
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> stopService.getStopByName(name));
-        verify(stopRepository).deleteByName(stopModel.getName());
+    private CreateStopCommand createCreateCommand() {
+        return new CreateStopCommand(STOP_NAME,
+            new CreateStopCommand.CreateGeographicCoordinatesCommand(LAT, LON));
     }
 
-    @Test
-    void removeStopByName_StopNotExists_ThrowException() {
-        String stopName = stopModel.getName();
-        when(stopRepository.existsByName(stopName)).thenReturn(false);
-
-        assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-            () -> stopService.removeStopByName(stopName));
+    private StopEntity createStopEntity() {
+        return StopEntity.builder()
+            .id(UUID.randomUUID())
+            .name(StopServiceImplTest.STOP_NAME)
+            .geographicCoordinates(
+                GeographicCoordinatesEntity.builder()
+                    .id(UUID.randomUUID())
+                    .latitude(LAT)
+                    .longitude(LON)
+                    .build())
+            .build();
     }
-
-    @Test
-    void removeStopByName_RouteContainStop_ThrowException() {
-        String stopName = stopModel.getName();
-        when(stopRepository.existsByName(stopName)).thenReturn(true);
-        when(routeRepository.existsByStop(stopName)).thenReturn(true);
-
-        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-            () -> stopService.removeStopByName(stopName));
-    }
-
 }
