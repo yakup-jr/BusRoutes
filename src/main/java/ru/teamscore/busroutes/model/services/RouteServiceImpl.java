@@ -118,14 +118,10 @@ public class RouteServiceImpl implements RouteService {
     @Transactional
     public Route copyRoute(String routeName, boolean isReverseOrder) {
         Route routeToCopy = getRouteByName(routeName);
-        Route copiedRoute = isReverseOrder ? routeToCopy.reverseRoute() : routeToCopy;
+        Route copiedRoute = routeToCopy.copy();
+        copiedRoute = isReverseOrder ? copiedRoute.reverseRoute() : copiedRoute;
 
-        String newName = String.format("%s_copy", copiedRoute.getName());
-        Route copiedRouteWithUpdatedName =
-            Route.valueOf(newName, copiedRoute.getType(), copiedRoute.getStops(),
-                copiedRoute.getInterval(), copiedRoute.getBusinessHours());
-
-        return addRoute(copiedRouteWithUpdatedName);
+        return addRoute(copiedRoute);
     }
 
     @Override

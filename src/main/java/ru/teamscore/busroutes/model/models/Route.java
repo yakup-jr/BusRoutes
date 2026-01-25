@@ -84,7 +84,13 @@ public class Route {
             j++;
         }
 
-        return Route.valueOf(name, type, reverseStops, interval, businessHours);
+        return Route.valueOf(name, type, reverseStops, interval,
+            businessHours);
+    }
+
+    public Route copy() {
+        return Route.valueOf(String.format("%s_copy", name), type, stops, interval,
+            businessHours);
     }
 
     public int getStopsCount() {

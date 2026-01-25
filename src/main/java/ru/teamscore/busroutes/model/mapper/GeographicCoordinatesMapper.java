@@ -1,6 +1,9 @@
 package ru.teamscore.busroutes.model.mapper;
 
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 import ru.teamscore.busroutes.data.entities.GeographicCoordinatesEntity;
 import ru.teamscore.busroutes.model.models.Stop;
 
@@ -12,10 +15,4 @@ public interface GeographicCoordinatesMapper {
     GeographicCoordinatesEntity map(Stop.GeographicCoordinates geographicCoordinates);
 
     Stop.GeographicCoordinates map(GeographicCoordinatesEntity geographicCoordinatesEntity);
-
-    @ObjectFactory
-    default Stop.GeographicCoordinates createGeographicCoordinates(
-        GeographicCoordinatesEntity entity) {
-        return Stop.GeographicCoordinates.valueOf(entity.getLatitude(), entity.getLongitude());
-    }
 }

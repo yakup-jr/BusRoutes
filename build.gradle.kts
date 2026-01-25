@@ -27,8 +27,8 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
-    implementation(libs.jakarta.validation.api)
     implementation(libs.mapstruct)
+    implementation(libs.spring.validation)
 
     compileOnly("org.projectlombok:lombok")
 
