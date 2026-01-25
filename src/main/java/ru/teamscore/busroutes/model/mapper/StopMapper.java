@@ -2,6 +2,8 @@ package ru.teamscore.busroutes.model.mapper;
 
 import org.mapstruct.*;
 import ru.teamscore.busroutes.data.entities.StopEntity;
+import ru.teamscore.busroutes.model.commands.CreateStopCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.models.Stop;
 
 import static org.mapstruct.ReportingPolicy.WARN;
@@ -18,6 +20,10 @@ public interface StopMapper {
 
     @Mapping(source = "geographicCoordinates", target = "coordinates")
     Stop map(StopEntity stopEntity);
+
+    Stop map(CreateStopCommand createStopCommand);
+
+    Stop map(FullUpdateStopCommand fullUpdateStopCommand);
 
     @ObjectFactory
     default Stop createStop(StopEntity entity) {

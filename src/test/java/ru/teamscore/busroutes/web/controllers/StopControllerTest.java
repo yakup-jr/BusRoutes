@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.teamscore.busroutes.model.commands.CreateStopCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
@@ -45,7 +47,7 @@ class StopControllerTest {
             new CreateStopDto("Stop1", new GeographicCoordinatesDto(53.198050, 50.108750));
         Stop stop = Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
 
-        when(stopService.addStop(any(Stop.class))).thenReturn(stop);
+        when(stopService.addStop(any(CreateStopCommand.class))).thenReturn(stop);
 
         mockMvc.perform(post("/api/v1/stop").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createStopDto)))
@@ -80,10 +82,12 @@ class StopControllerTest {
     void updateStopByName_ReturnUpdatedStop() throws Exception {
         FullUpdateStopDto fullUpdateStopDto = new FullUpdateStopDto("UpdatedStop1",
             new GeographicCoordinatesDto(53.198060, 50.108760));
+        FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("UpdatedStop1",
+            new FullUpdateStopCommand.FullUpdateGeographicCommand(53.198060, 50.108760));
         Stop stop = Stop.valueOf("UpdatedStop1", Stop.GeographicCoordinates.valueOf(53.198060,
             50.108760));
 
-        when(stopService.updateStopByName("Stop1", stop)).thenReturn(stop);
+        when(stopService.updateStopByName("Stop1", fullUpdateStopCommand)).thenReturn(stop);
 
         mockMvc.perform(put("/api/v1/stop/Stop1").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isOk())
@@ -97,10 +101,10 @@ class StopControllerTest {
         FullUpdateStopDto fullUpdateStopDto =
             new FullUpdateStopDto("UpdatedStop1", new GeographicCoordinatesDto(53.198060,
                 50.108760));
-        Stop stop = Stop.valueOf("UpdatedStop1", Stop.GeographicCoordinates.valueOf(53.198060,
-            50.108760));
+        FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("UpdatedStop1",
+            new FullUpdateStopCommand.FullUpdateGeographicCommand(53.198060, 50.108760));
 
-        when(stopService.updateStopByName("NonExistingStop", stop)).thenThrow(
+        when(stopService.updateStopByName("NonExistingStop", fullUpdateStopCommand)).thenThrow(
             new NotFoundException("NonExistingStop", ItemType.STOP));
 
         mockMvc.perform(put("/api/v1/stop/NonExistingStop").contentType(MediaType.APPLICATION_JSON)

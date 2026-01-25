@@ -7,7 +7,6 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.model.services.StopService;
 import ru.teamscore.busroutes.web.dtos.stops.CreateStopDto;
 import ru.teamscore.busroutes.web.dtos.stops.FullUpdateStopDto;
@@ -23,8 +22,8 @@ public class StopController {
 
     @PostMapping("/stop")
     public ResponseEntity<StopDto> addStop(@RequestBody @Valid CreateStopDto newStop) {
-        Stop stopModel = mapper.map(newStop);
-        Stop savedStopModel = stopService.addStop(stopModel);
+        var stopModel = mapper.map(newStop);
+        var savedStopModel = stopService.addStop(stopModel);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.map(savedStopModel));
     }
 
@@ -42,8 +41,8 @@ public class StopController {
         @PathVariable @NotBlank(message = "Route name cannot be empty")
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
         String name, @RequestBody FullUpdateStopDto updatedStop) {
-        Stop stopModel = mapper.map(updatedStop);
-        Stop updatedStopModel = stopService.updateStopByName(name, stopModel);
+        var fullUpdateStopCommand = mapper.map(updatedStop);
+        var updatedStopModel = stopService.updateStopByName(name, fullUpdateStopCommand);
         return ResponseEntity.status(HttpStatus.OK).body(mapper.map(updatedStopModel));
     }
 

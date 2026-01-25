@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-@Builder
+@Builder(builderClassName = "StopBuilder")
 public class Stop {
     private final String name;
     private final GeographicCoordinates coordinates;
@@ -18,15 +18,25 @@ public class Stop {
     }
 
     @JsonCreator
-    public static Stop valueOf(
-        String name, GeographicCoordinates coordinates
-    ) {
-        return new Stop(name, coordinates);
+    public static Stop valueOf(String name, GeographicCoordinates coordinates) {
+        return builder().name(name).coordinates(coordinates).build();
+    }
+
+    public static class StopBuilder {
+        public Stop build() {
+            if (this.name == null || this.name.isBlank()) {
+                throw new IllegalArgumentException("Stop name cannot be null or blank");
+            }
+            if (this.coordinates == null) {
+                throw new IllegalArgumentException("Coordinates cannot be null");
+            }
+            return new Stop(this.name, this.coordinates);
+        }
     }
 
     @Getter
     @EqualsAndHashCode
-    @Builder
+    @Builder(builderClassName = "GeographicCoordinatesBuilder")
     public static class GeographicCoordinates {
         private final double latitude;
         private final double longitude;
@@ -38,13 +48,19 @@ public class Stop {
 
         @JsonCreator
         public static GeographicCoordinates valueOf(double latitude, double longitude) {
-            if (latitude < -90 || latitude > 90) {
-                throw new IllegalArgumentException("Latitude out of range");
+            return builder().latitude(latitude).longitude(longitude).build();
+        }
+
+        public static class GeographicCoordinatesBuilder {
+            public GeographicCoordinates build() {
+                if (this.latitude < -90 || this.latitude > 90) {
+                    throw new IllegalArgumentException("Latitude out of range [-90, 90]");
+                }
+                if (this.longitude < -180 || this.longitude > 180) {
+                    throw new IllegalArgumentException("Longitude out of range [-180, 180]");
+                }
+                return new GeographicCoordinates(this.latitude, this.longitude);
             }
-            if (longitude < -180 || longitude > 180) {
-                throw new IllegalArgumentException("Longitude out of range");
-            }
-            return new GeographicCoordinates(latitude, longitude);
         }
     }
 }

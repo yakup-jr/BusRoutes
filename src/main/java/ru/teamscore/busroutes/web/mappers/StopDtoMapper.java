@@ -3,6 +3,8 @@ package ru.teamscore.busroutes.web.mappers;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import ru.teamscore.busroutes.model.commands.CreateStopCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.web.dtos.stops.CreateStopDto;
 import ru.teamscore.busroutes.web.dtos.stops.FullUpdateStopDto;
@@ -16,8 +18,8 @@ public interface StopDtoMapper {
 
     StopDto map(Stop stop);
 
-    Stop map(FullUpdateStopDto fullUpdateStopDto);
+    FullUpdateStopCommand map(FullUpdateStopDto fullUpdateStopDto);
 
-    Stop map(CreateStopDto createStopDto);
+    CreateStopCommand map(CreateStopDto createStopDto);
 
 }

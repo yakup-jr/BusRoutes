@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.StopEntity;
 import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
+import ru.teamscore.busroutes.model.commands.CreateStopCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
@@ -21,13 +23,14 @@ public class StopServiceImpl implements StopService {
 
     @Override
     @Transactional
-    public Stop addStop(Stop stop) {
-        if (stopRepository.existsByName(stop.getName())) {
+    public Stop addStop(CreateStopCommand stop) {
+        if (stopRepository.existsByName(stop.name())) {
             throw new AlreadyExistsException("Stop already exists");
         }
 
-        StopEntity mappedStopEntity = mapper.map(stop);
-        StopEntity savedStopEntity = stopRepository.save(mappedStopEntity);
+        Stop stopModel = mapper.map(stop);
+        StopEntity stopEntity = mapper.map(stopModel);
+        StopEntity savedStopEntity = stopRepository.save(stopEntity);
         return mapper.map(savedStopEntity);
     }
 
@@ -42,12 +45,13 @@ public class StopServiceImpl implements StopService {
 
     @Override
     @Transactional
-    public Stop updateStopByName(String oldName, Stop updatedStop) {
+    public Stop updateStopByName(String oldName, FullUpdateStopCommand updatedStop) {
         if (!stopRepository.existsByName(oldName)) {
             throw new NotFoundException(oldName, ItemType.STOP);
         }
 
-        StopEntity mappedStopEntity = mapper.map(updatedStop);
+        Stop stopModel = mapper.map(updatedStop);
+        StopEntity mappedStopEntity = mapper.map(stopModel);
         StopEntity savedStopEntity = stopRepository.save(mappedStopEntity);
         return mapper.map(savedStopEntity);
     }

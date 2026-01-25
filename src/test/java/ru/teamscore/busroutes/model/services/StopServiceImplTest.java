@@ -11,6 +11,8 @@ import ru.teamscore.busroutes.data.entities.GeographicCoordinatesEntity;
 import ru.teamscore.busroutes.data.entities.StopEntity;
 import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
+import ru.teamscore.busroutes.model.commands.CreateStopCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.GeographicCoordinatesMapper;
@@ -31,6 +33,8 @@ class StopServiceImplTest {
     @Mock
     private RouteRepository routeRepository;
     private StopServiceImpl stopService;
+    private final CreateStopCommand createStopCommand = new CreateStopCommand("Ulyanovskaya " +
+        "Street", new CreateStopCommand.CreateGeographicCoordinatesCommand(53.198050, 50.108750));
     private final Stop stopModel = Stop.valueOf("Ulyanovskaya Street",
         Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
     private final StopEntity stopEntity =
@@ -42,6 +46,7 @@ class StopServiceImplTest {
                     .latitude(stopModel.getCoordinates().getLatitude())
                     .longitude(stopModel.getCoordinates().getLongitude()).build())
             .build();
+
 
     @BeforeEach
     void setUp() {
@@ -56,22 +61,22 @@ class StopServiceImplTest {
 
     @Test
     void addStop() {
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(false);
+        when(stopRepository.existsByName(createStopCommand.name())).thenReturn(false);
         when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        Stop newStop = stopService.addStop(stopModel);
+        Stop newStop = stopService.addStop(createStopCommand);
 
         assertThat(newStop).isEqualTo(stopModel);
 
-        verify(stopRepository).existsByName(stopModel.getName());
+        verify(stopRepository).existsByName(createStopCommand.name());
         verify(stopRepository).save(any());
     }
 
     @Test
     void addStop_StopAlreadyExists_ThrowException() {
-        when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
+        when(stopRepository.existsByName(createStopCommand.name())).thenReturn(true);
         assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
-            () -> stopService.addStop(stopModel));
+            () -> stopService.addStop(createStopCommand));
 
         verify(stopRepository).existsByName(stopModel.getName());
     }
@@ -89,14 +94,17 @@ class StopServiceImplTest {
 
     @Test
     void updateStopByName() {
-        Stop newStop = Stop.valueOf("Ulyanovskaya Street 2",
+        FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("Ulyanovskaya " +
+            "Street 2", new FullUpdateStopCommand.FullUpdateGeographicCommand(54.198050,
+            51.108750));
+        Stop stopToUpdate = Stop.valueOf("Ulyanovskaya Street 2",
             Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
         when(stopRepository.existsByName(stopModel.getName())).thenReturn(true);
         when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        Stop updatedStop = stopService.updateStopByName(stopModel.getName(), newStop);
+        Stop updatedStop = stopService.updateStopByName(stopModel.getName(), fullUpdateStopCommand);
 
-        assertThat(updatedStop).isEqualTo(newStop);
+        assertThat(updatedStop).isEqualTo(stopToUpdate);
         verify(stopRepository).existsByName(stopModel.getName());
         verify(stopRepository).save(any(StopEntity.class));
     }
