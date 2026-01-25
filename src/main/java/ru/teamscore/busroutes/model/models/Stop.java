@@ -24,13 +24,13 @@ public class Stop {
 
     public static class StopBuilder {
         public Stop build() {
-            if (this.name == null || this.name.isBlank()) {
+            if (name == null || name.isBlank()) {
                 throw new IllegalArgumentException("Stop name cannot be null or blank");
             }
-            if (this.coordinates == null) {
+            if (coordinates == null) {
                 throw new IllegalArgumentException("Coordinates cannot be null");
             }
-            return new Stop(this.name, this.coordinates);
+            return new Stop(name, coordinates);
         }
     }
 
@@ -53,13 +53,13 @@ public class Stop {
 
         public static class GeographicCoordinatesBuilder {
             public GeographicCoordinates build() {
-                if (this.latitude < -90 || this.latitude > 90) {
+                if (latitude < -90 || latitude > 90) {
                     throw new IllegalArgumentException("Latitude out of range [-90, 90]");
                 }
-                if (this.longitude < -180 || this.longitude > 180) {
+                if (longitude < -180 || longitude > 180) {
                     throw new IllegalArgumentException("Longitude out of range [-180, 180]");
                 }
-                return new GeographicCoordinates(this.latitude, this.longitude);
+                return new GeographicCoordinates(latitude, longitude);
             }
         }
     }

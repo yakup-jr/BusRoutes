@@ -33,7 +33,7 @@ public class BusinessHours {
             if (endAt == null) {
                 throw new IllegalArgumentException("EndAt can't be null");
             }
-            return new BusinessHours(this.startAt, this.endAt);
+            return new BusinessHours(startAt, endAt);
         }
     }
 }

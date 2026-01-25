@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import ru.teamscore.busroutes.model.commands.CreateRouteCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateRouteCommand;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.models.*;
 import ru.teamscore.busroutes.model.services.RouteService;
@@ -85,7 +87,7 @@ class RouteControllerTest {
 
     @Test
     void addRoute_ReturnCreated() throws Exception {
-        when(routeService.addRoute(any(Route.class))).thenReturn(route1);
+        when(routeService.addRoute(any(CreateRouteCommand.class))).thenReturn(route1);
 
         MvcResult mvcResult =
             mockMvc.perform(post("/api/v1/route").contentType(MediaType.APPLICATION_JSON)
@@ -203,7 +205,7 @@ class RouteControllerTest {
         Route updatedRoute = Route.valueOf("route1", "trolleybus", route1.getStops(),
             route1.getInterval(), route1.getBusinessHours());
 
-        when(routeService.updateRouteByName(eq("route1"), any(Route.class)))
+        when(routeService.updateRouteByName(eq("route1"), any(FullUpdateRouteCommand.class)))
             .thenReturn(updatedRoute);
 
         FullUpdateRouteDto updateDto = new FullUpdateRouteDto(

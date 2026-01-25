@@ -30,9 +30,9 @@ public class RouteController {
 
     @PostMapping("/route")
     public ResponseEntity<SummaryRouteDto> addRoute(@RequestBody @Valid CreateRouteDto newRoute) {
-        Route routeModel = mapper.map(newRoute);
-        Route savedRouteModel = routeService.addRoute(routeModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.map(savedRouteModel));
+        var routeModel = mapper.mapCreateRoute(newRoute);
+        var savedRouteModel = routeService.addRoute(routeModel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.mapRoute(savedRouteModel));
     }
 
     @PostMapping("/route/{routeName}/copy")
@@ -43,7 +43,7 @@ public class RouteController {
                                                          message = "Route name must be between 2 and 255 characters")
                                                      String routeName) {
         Route routeModel = routeService.copyRoute(routeName, isReverseOrder);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.map(routeModel));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.mapRoute(routeModel));
     }
 
     @GetMapping(value = "/route", params = {"stopName", "sort"})
@@ -53,7 +53,7 @@ public class RouteController {
         String stopName, @RequestParam @NotBlank String sort) {
         List<Travel> travels =
             routeService.getRoutesByStop(stopName, TravelSortOption.valueOf(sort));
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.map(travels));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapTravel(travels));
     }
 
     @GetMapping(value = "/route", params = {"fromStopName", "toStopName", "sort"})
@@ -62,7 +62,7 @@ public class RouteController {
                                                                 @RequestParam String sort) {
         List<Travel> travels =
             routeService.getRoutesByStops(fromStopName, toStopName, TravelSortOption.valueOf(sort));
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.map(travels));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapTravel(travels));
     }
 
     @GetMapping("/route/{name}")
@@ -71,7 +71,7 @@ public class RouteController {
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
         String name) {
         Route routeModelByName = routeService.getRouteByName(name);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.map(routeModelByName));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapRoute(routeModelByName));
     }
 
     @PutMapping("/route/{name}")
@@ -79,9 +79,9 @@ public class RouteController {
         @PathVariable @NotBlank(message = "Route name cannot be empty")
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
         String name, @RequestBody @Valid FullUpdateRouteDto updatedRoute) {
-        Route routeModel = mapper.map(updatedRoute);
-        Route updatedRouteModel = routeService.updateRouteByName(name, routeModel);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.map(updatedRouteModel));
+        var routeModel = mapper.mapUpdateRoute(updatedRoute);
+        var updatedRouteModel = routeService.updateRouteByName(name, routeModel);
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapRoute(updatedRouteModel));
     }
 
     @DeleteMapping("/route/{name}")
