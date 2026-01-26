@@ -1,14 +1,15 @@
 package ru.teamscore.busroutes.model.models;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 
 import java.time.Duration;
 import java.time.LocalTime;
 
 @Getter
 @EqualsAndHashCode
+@Builder
 public class Travel {
 
     private final Route route;
@@ -21,11 +22,17 @@ public class Travel {
         this.nextArrival = nextArrival;
     }
 
-    public static Travel valueOf(@NonNull Route route,
-                                 @NonNull Duration timeInRoute,
-                                 @NonNull LocalTime nextArrival) {
+    public static Travel valueOf(Route route,
+                                 Duration timeInRoute,
+                                 LocalTime nextArrival) {
+        if (route == null) {
+            throw new IllegalArgumentException("route can't be null");
+        }
         if (timeInRoute.isNegative()) {
             throw new IllegalArgumentException("Time in route must be non-negative");
+        }
+        if (nextArrival == null) {
+            throw new IllegalArgumentException("next arrival can't be null");
         }
 
         return new Travel(route, timeInRoute, nextArrival);
