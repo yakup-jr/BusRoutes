@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.teamscore.busroutes.model.services.StopService;
 import ru.teamscore.busroutes.web.dtos.stops.CreateStopDto;
@@ -16,6 +17,7 @@ import ru.teamscore.busroutes.web.mappers.StopDtoMapper;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Validated
 public class StopController {
     private final StopService stopService;
     private final StopDtoMapper mapper;

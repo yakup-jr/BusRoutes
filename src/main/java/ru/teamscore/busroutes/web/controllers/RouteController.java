@@ -59,9 +59,9 @@ public class RouteController {
     @GetMapping(value = "/route", params = {"fromStopName", "toStopName", "sort"})
     public ResponseEntity<Iterable<TravelDto>> getRoutesByStops(@RequestParam String fromStopName,
                                                                 @RequestParam String toStopName,
-                                                                @RequestParam String sort) {
+                                                                @RequestParam TravelSortOption sort) {
         List<Travel> travels =
-            routeService.getRoutesByStops(fromStopName, toStopName, TravelSortOption.valueOf(sort));
+            routeService.getRoutesByStops(fromStopName, toStopName, sort);
         return ResponseEntity.status(HttpStatus.OK).body(mapper.mapTravel(travels));
     }
 
