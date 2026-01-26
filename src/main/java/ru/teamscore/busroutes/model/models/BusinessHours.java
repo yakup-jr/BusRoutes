@@ -6,9 +6,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.time.LocalTime;
+
 @Getter
 @EqualsAndHashCode
-@Builder
+@Builder(builderClassName = "BusinessHoursBuilder")
 public class BusinessHours {
 
     private final LocalTime startAt;
@@ -21,12 +22,18 @@ public class BusinessHours {
 
     @JsonCreator
     public static BusinessHours valueOf(LocalTime startAt, LocalTime endAt) {
-        if (startAt == null) {
-            throw new IllegalArgumentException("start can't be null");
+        return builder().startAt(startAt).endAt(endAt).build();
+    }
+
+    public static class BusinessHoursBuilder {
+        public BusinessHours build() {
+            if (startAt == null) {
+                throw new IllegalArgumentException("StartAt can't be null");
+            }
+            if (endAt == null) {
+                throw new IllegalArgumentException("EndAt can't be null");
+            }
+            return new BusinessHours(startAt, endAt);
         }
-        if (endAt == null) {
-            throw new IllegalArgumentException("end at can't be null")
-        }
-        return new BusinessHours(startAt, endAt);
     }
 }

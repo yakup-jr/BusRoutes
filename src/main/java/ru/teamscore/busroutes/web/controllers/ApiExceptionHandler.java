@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 
-import java.util.stream.Collectors;
-
 @ControllerAdvice
 public class ApiExceptionHandler {
 
@@ -26,10 +24,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException e) {
-        String errors = e.getBindingResult().getFieldErrors().stream()
-            .map(error -> String.format("%s : %s", error.getField(), error.getDefaultMessage()))
-            .collect(Collectors.joining(", "));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

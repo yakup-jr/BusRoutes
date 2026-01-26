@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 
 @Getter
 @EqualsAndHashCode
-@Builder
+@Builder(builderClassName = "RouteBuilder")
 public class Route {
 
     private final String name;
@@ -34,29 +34,16 @@ public class Route {
 
     @JsonCreator
     public static Route valueOf(String name, String type, Iterable<RouteStop> stops,
-                                Duration interval,
-                                BusinessHours businessHours) {
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Name must not be empty");
-        }
-        if (type == null || type.isEmpty()) {
-            throw new IllegalArgumentException("Type must not be empty");
-        }
-        if (interval == null || interval.isNegative()) {
-            throw new IllegalArgumentException("Interval must be non-negative");
-        }
-        List<RouteStop> stopList = StreamSupport.stream(stops.spliterator(), false).toList();
-        if (stopList.size() < 2) {
-            throw new IllegalArgumentException("Stops must contain at least 2 elements");
-        }
-
-        return new Route(name, type, stopList, interval, businessHours);
+                                Duration interval, BusinessHours businessHours) {
+        return builder().name(name).type(type)
+            .stops(stops != null ? StreamSupport.stream(stops.spliterator(), false).toList() : null)
+            .interval(interval).businessHours(businessHours).build();
     }
 
     public Route addStop(RouteStop stop) {
         if (stops.contains(stop)) {
-            throw new IllegalArgumentException(String.format("Stop with name %s already exists",
-                stop.getStop().getName()));
+            throw new IllegalArgumentException(
+                String.format("Stop with name %s already exists", stop.getStop().getName()));
         }
 
         List<RouteStop> routeStops = new ArrayList<>(this.stops);
@@ -87,16 +74,40 @@ public class Route {
         return Route.valueOf(name, type, reverseStops, interval, businessHours);
     }
 
+    public Route copy() {
+        return Route.valueOf(String.format("%s_copy", name), type, stops, interval, businessHours);
+    }
+
     public int getStopsCount() {
         return stops.size();
     }
 
     public boolean containsStop(String stopName) {
-        return StreamSupport.stream(stops.spliterator(), false)
-            .anyMatch(stop -> stop.getStop().getName().equals(stopName));
+        return stops.stream().anyMatch(stop -> stop.getStop().getName().equals(stopName));
     }
 
     public Iterable<RouteStop> getStops() {
         return stops;
+    }
+
+    public static class RouteBuilder {
+        public Route build() {
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("Name must not be empty");
+            }
+            if (type == null || type.isBlank()) {
+                throw new IllegalArgumentException("Type must not be empty");
+            }
+            if (interval == null || interval.isNegative()) {
+                throw new IllegalArgumentException("Interval must be non-negative");
+            }
+            if (businessHours == null) {
+                throw new IllegalArgumentException("Business hours must not be null");
+            }
+            if (stops == null || stops.size() < 2) {
+                throw new IllegalArgumentException("Stops must contain at least 2 elements");
+            }
+            return new Route(name, type, stops, interval, businessHours);
+        }
     }
 }

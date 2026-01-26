@@ -4,13 +4,19 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.RouteEntity;
+import ru.teamscore.busroutes.data.entities.StopEntity;
 import ru.teamscore.busroutes.data.repositories.RouteRepository;
 import ru.teamscore.busroutes.data.repositories.StopRepository;
+import ru.teamscore.busroutes.model.commands.CreateRouteCommand;
+import ru.teamscore.busroutes.model.commands.FullUpdateRouteCommand;
+import ru.teamscore.busroutes.model.commands.RouteStopCommand;
 import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.RouteMapper;
+import ru.teamscore.busroutes.model.mapper.StopMapper;
+import ru.teamscore.busroutes.model.models.BusinessHours;
 import ru.teamscore.busroutes.model.models.Route;
 import ru.teamscore.busroutes.model.models.RouteStop;
 import ru.teamscore.busroutes.model.models.Travel;
@@ -20,6 +26,8 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -28,30 +36,50 @@ public class RouteServiceImpl implements RouteService {
     private final Clock clock;
     private final StopRepository stopRepository;
     private final RouteRepository routeRepository;
+    private final StopMapper stopMapper;
     private final RouteMapper mapper;
 
     @Override
     @Transactional
-    public Route addRoute(Route route) {
-        if (routeRepository.existsByName(route.getName())) {
+    public Route addRoute(CreateRouteCommand routeToSave) {
+        if (routeRepository.existsByName(routeToSave.name())) {
             throw new IllegalArgumentException("Route already exists");
         }
 
-        validateStopsExists(route.getStops());
+        List<String> stopNames =
+            StreamSupport.stream(routeToSave.stops().spliterator(), false)
+                .map(RouteStopCommand::stopName).toList();
+        List<RouteStop> routeStops = getRouteStopsByStop(stopNames, routeToSave.stops());
 
+        Route route = Route.valueOf(routeToSave.name(), routeToSave.type(), routeStops,
+            routeToSave.interval(),
+            BusinessHours.valueOf(routeToSave.businessHours().startAt(),
+                routeToSave.businessHours().endAt()));
+
+        return saveRoute(route);
+    }
+
+    private Route saveRoute(Route route) {
         RouteEntity mappedEntity = mapper.map(route);
         RouteEntity savedEntity = routeRepository.save(mappedEntity);
         return mapper.map(savedEntity);
     }
 
-    private void validateStopsExists(Iterable<RouteStop> routeStops) {
-        List<String> stopNames = StreamSupport.stream(routeStops.spliterator(), false)
-            .map(routeStop -> routeStop.getStop().getName()).toList();
+    private List<RouteStop> getRouteStopsByStop(
+        List<String> stopNames, Iterable<RouteStopCommand> routeStop) {
+        Map<String, StopEntity> stopEntityMap = stopRepository.findAllByNameIn(stopNames).stream()
+            .collect(Collectors.toMap(StopEntity::getName, stopEntity -> stopEntity));
 
-        long stopsCount = stopRepository.countByNameIn(stopNames);
-        if (stopsCount != stopNames.size()) {
-            throw new NotFoundException("some stops not exists", ItemType.STOP);
+        if (stopEntityMap.size() < stopNames.size()) {
+            throw new NotFoundException("Some stops not found", ItemType.STOP);
         }
+
+        return StreamSupport.stream(routeStop.spliterator(), false)
+            .map(rs -> RouteStop.valueOf(
+                rs.arriveAtFromStart(),
+                rs.stopOrder(),
+                stopMapper.map(stopEntityMap.get(rs.stopName()))
+            )).toList();
     }
 
     @Override
@@ -63,6 +91,7 @@ public class RouteServiceImpl implements RouteService {
 
         return sortTravels(travels, sort);
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -118,30 +147,35 @@ public class RouteServiceImpl implements RouteService {
     @Transactional
     public Route copyRoute(String routeName, boolean isReverseOrder) {
         Route routeToCopy = getRouteByName(routeName);
-        Route copiedRoute = isReverseOrder ? routeToCopy.reverseRoute() : routeToCopy;
+        Route copiedRoute = routeToCopy.copy();
+        if (isReverseOrder) {
+            copiedRoute = copiedRoute.reverseRoute();
+        }
 
-        String newName = String.format("%s_copy", copiedRoute.getName());
-        Route copiedRouteWithUpdatedName =
-            Route.valueOf(newName, copiedRoute.getType(), copiedRoute.getStops(),
-                copiedRoute.getInterval(), copiedRoute.getBusinessHours());
-
-        return addRoute(copiedRouteWithUpdatedName);
+        return saveRoute(copiedRoute);
     }
 
     @Override
     @Transactional
-    public Route updateRouteByName(String oldRouteName, Route newRoute) {
-        if (!oldRouteName.equals(newRoute.getName()) &&
-            routeRepository.existsByName(newRoute.getName())) {
+    public Route updateRouteByName(String oldRouteName, FullUpdateRouteCommand routeToUpdate) {
+        if (!oldRouteName.equals(routeToUpdate.name()) &&
+            routeRepository.existsByName(routeToUpdate.name())) {
             throw new AlreadyExistsException("Route name already exists");
         }
 
         RouteEntity oldRoute = routeRepository.findByName(oldRouteName)
             .orElseThrow(() -> new NotFoundException(oldRouteName, ItemType.ROUTE));
 
-        validateStopsExists(newRoute.getStops());
+        List<String> stopNames = StreamSupport.stream(routeToUpdate.stops().spliterator(), false)
+            .map(RouteStopCommand::stopName).toList();
+        List<RouteStop> routeStops = getRouteStopsByStop(stopNames, routeToUpdate.stops());
 
-        RouteEntity routeEntity = mapper.map(newRoute);
+        Route route = Route.valueOf(routeToUpdate.name(), routeToUpdate.type(), routeStops,
+            routeToUpdate.interval(),
+            BusinessHours.valueOf(routeToUpdate.businessHours().startAt(),
+                routeToUpdate.businessHours().endAt()));
+
+        RouteEntity routeEntity = mapper.map(route);
         routeEntity.setId(oldRoute.getId());
 
         RouteEntity savedRouteEntity = routeRepository.save(routeEntity);
