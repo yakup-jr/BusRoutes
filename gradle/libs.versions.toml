@@ -4,6 +4,7 @@ springDependencyManagement = "1.1.7"
 jakartaValidation = "3.1.1"
 assertj = "3.27.6"
 mockito = "5.21.0"
+mapstruct = "1.6.3"
 
 [plugins]
 springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
@@ -13,3 +14,5 @@ springDependencyManagement = { id = "io.spring.dependency-management", version.r
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version.ref = "jakartaValidation" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }

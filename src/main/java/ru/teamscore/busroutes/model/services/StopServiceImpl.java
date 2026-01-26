@@ -2,50 +2,67 @@ package ru.teamscore.busroutes.model.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.teamscore.busroutes.data.entities.StopEntity;
+import ru.teamscore.busroutes.data.repositories.RouteRepository;
+import ru.teamscore.busroutes.data.repositories.StopRepository;
 import ru.teamscore.busroutes.model.enums.ItemType;
+import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
+import ru.teamscore.busroutes.model.mapper.StopMapper;
 import ru.teamscore.busroutes.model.models.Stop;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 @AllArgsConstructor
 public class StopServiceImpl implements StopService {
-    private final CopyOnWriteArrayList<Stop> stops;
+    private final StopRepository stopRepository;
+    private final RouteRepository routeRepository;
+    private final StopMapper mapper;
 
     @Override
+    @Transactional
     public Stop addStop(Stop stop) {
-        if (stops.contains(stop)) {
-            throw new IllegalArgumentException("Stop already exists");
+        if (stopRepository.existsByName(stop.getName())) {
+            throw new AlreadyExistsException("Stop already exists");
         }
-        stops.add(stop);
-        return stop;
+
+        StopEntity mappedStopEntity = mapper.map(stop);
+        StopEntity savedStopEntity = stopRepository.save(mappedStopEntity);
+        return mapper.map(savedStopEntity);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Stop getStopByName(String name) {
-        return stops.stream()
-            .filter(stop -> stop.getName().equals(name))
-            .findFirst()
+        StopEntity foundStopEntity = stopRepository.findByName(name)
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
 
+        return mapper.map(foundStopEntity);
     }
 
     @Override
-    public boolean containsStop(String stopName) {
-        return stops.stream().anyMatch(stop -> stop.getName().equals(stopName));
+    @Transactional
+    public Stop updateStopByName(String oldName, Stop updatedStop) {
+        if (!stopRepository.existsByName(oldName)) {
+            throw new NotFoundException(oldName, ItemType.STOP);
+        }
+
+        StopEntity mappedStopEntity = mapper.map(updatedStop);
+        StopEntity savedStopEntity = stopRepository.save(mappedStopEntity);
+        return mapper.map(savedStopEntity);
     }
 
     @Override
-    public Stop updateStopByName(String oldName, Stop stop) {
-        int index = stops.indexOf(getStopByName(oldName));
-        stops.set(index, stop);
-        return stops.get(index);
-    }
-
-    @Override
+    @Transactional
     public void removeStopByName(String name) {
-        Stop stop = getStopByName(name);
-        stops.remove(stop);
+        if (!stopRepository.existsByName(name)) {
+            throw new NotFoundException(name, ItemType.STOP);
+        }
+        if (routeRepository.existsByStop(name)) {
+            throw new IllegalArgumentException(String.format(
+                "%s exists in route. You can't remove stop until it " +
+                    "hasn't relation with any route", name));
+        }
+        stopRepository.deleteByName(name);
     }
 }

@@ -1,31 +1,33 @@
 package ru.teamscore.busroutes.model.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
+@Builder
 public class RouteStop {
 
     private final int arriveAtFromStart;
-    private final int order;
-    private final String stopName;
+    private final int stopOrder;
+    private final Stop stop;
 
-    private RouteStop(int arriveAtFromStart, int order, String stopName) {
+    private RouteStop(int arriveAtFromStart, int stopOrder, Stop stop) {
         this.arriveAtFromStart = arriveAtFromStart;
-        this.order = order;
-        this.stopName = stopName;
+        this.stopOrder = stopOrder;
+        this.stop = stop;
     }
 
     @JsonCreator
-    public static RouteStop valueOf(int arriveAtFromStart, int order, String stop) {
+    public static RouteStop valueOf(int arriveAtFromStart, int stopOrder, Stop stop) {
         if (arriveAtFromStart < 0) {
             throw new IllegalArgumentException("Arrive at from start must be non-negative");
         }
-        if (order < 0) {
+        if (stopOrder < 0) {
             throw new IllegalArgumentException("Order must be non-negative");
         }
-        return new RouteStop(arriveAtFromStart, order, stop);
+        return new RouteStop(arriveAtFromStart, stopOrder, stop);
     }
 }

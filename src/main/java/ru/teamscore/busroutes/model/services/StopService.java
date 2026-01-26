@@ -7,8 +7,6 @@ public interface StopService {
 
     Stop getStopByName(String name);
 
-    boolean containsStop(String stopName);
-
     Stop updateStopByName(String name, Stop stop);
 
     void removeStopByName(String name);

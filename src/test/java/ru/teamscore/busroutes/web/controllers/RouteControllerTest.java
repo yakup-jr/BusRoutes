@@ -46,8 +46,7 @@ class RouteControllerTest {
         stop2 = Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
 
         List<RouteStop> stopsRoute1 =
-            List.of(RouteStop.valueOf(0, 1, stop1.getName()),
-                RouteStop.valueOf(120, 2, stop2.getName()));
+            List.of(RouteStop.valueOf(0, 1, stop1), RouteStop.valueOf(120, 2, stop2));
 
         BusinessHours businessHours =
             BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));

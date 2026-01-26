@@ -28,13 +28,20 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation(libs.jakarta.validation.api)
+    implementation(libs.mapstruct)
+
     compileOnly("org.projectlombok:lombok")
+
     runtimeOnly("org.postgresql:postgresql")
+
     annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor(libs.mapstruct.processor)
+
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation(libs.assertj.core)
     testImplementation(libs.mockito.core)
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
