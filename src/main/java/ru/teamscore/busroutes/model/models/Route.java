@@ -1,30 +1,48 @@
 package ru.teamscore.busroutes.model.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import ru.teamscore.busroutes.model.enums.ItemType;
+import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Getter
 @EqualsAndHashCode
-@Builder(builderClassName = "RouteBuilder")
 public class Route {
 
     private final String name;
     private final String type;
-    @Getter(AccessLevel.NONE)
     private final List<RouteStop> stops;
     private final Duration interval;
     private final BusinessHours businessHours;
 
+    @Builder
     private Route(String name, String type, List<RouteStop> stops, Duration interval,
                   BusinessHours businessHours) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name must not be empty");
+        }
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("Type must not be empty");
+        }
+        if (interval == null || interval.isNegative()) {
+            throw new IllegalArgumentException("Interval must be non-negative");
+        }
+        if (businessHours == null) {
+            throw new IllegalArgumentException("Business hours must not be null");
+        }
+        if (stops == null || stops.size() < 2) {
+            throw new IllegalArgumentException("Stops must contain at least 2 elements");
+        }
+
         this.name = name;
         this.type = type;
         this.stops = List.copyOf(stops);
@@ -35,9 +53,8 @@ public class Route {
     @JsonCreator
     public static Route valueOf(String name, String type, Iterable<RouteStop> stops,
                                 Duration interval, BusinessHours businessHours) {
-        return builder().name(name).type(type)
-            .stops(stops != null ? StreamSupport.stream(stops.spliterator(), false).toList() : null)
-            .interval(interval).businessHours(businessHours).build();
+        List<RouteStop> routeStops = StreamSupport.stream(stops.spliterator(), false).toList();
+        return new Route(name, type, routeStops, interval, businessHours);
     }
 
     public Route addStop(RouteStop stop) {
@@ -49,6 +66,56 @@ public class Route {
         List<RouteStop> routeStops = new ArrayList<>(this.stops);
         routeStops.add(stop);
         return Route.valueOf(name, type, routeStops, interval, businessHours);
+    }
+
+    public Travel createTravelToLastStop(String stopName, Clock clock) {
+        int lastStopSeconds = stops.stream()
+            .mapToInt(RouteStop::getArriveAtFromStart)
+            .max()
+            .orElse(0);
+        return createTravel(stopName, lastStopSeconds, clock);
+    }
+
+    public Travel createTravelBetweenStops(String fromStopName, String toStopName, Clock clock) {
+        int toSeconds = findStopByName(toStopName).getArriveAtFromStart();
+        return createTravel(fromStopName, toSeconds, clock);
+    }
+
+    private Travel createTravel(String fromStopName, int toSeconds, Clock clock) {
+        int fromSeconds = findStopByName(fromStopName).getArriveAtFromStart();
+        int diffSeconds = Math.max(0, toSeconds - fromSeconds);
+
+        return calculateTravelMetrics(Duration.ofSeconds(diffSeconds), clock);
+    }
+
+    private RouteStop findStopByName(String name) {
+        return stops.stream()
+            .filter(rs -> rs.getStop().getName().equals(name))
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
+    }
+
+    private Travel calculateTravelMetrics(Duration timeInRoute, Clock clock) {
+        LocalTime now = LocalTime.now(clock);
+        LocalTime startTime = businessHours.getStartAt();
+        LocalTime endTime = businessHours.getEndAt();
+
+        LocalTime nextArrival;
+        if (now.isBefore(startTime) || now.isAfter(endTime)) {
+            nextArrival = startTime;
+        } else {
+            nextArrival = calculateNextArriveAt(now, startTime);
+        }
+
+        return Travel.valueOf(this, timeInRoute, nextArrival);
+    }
+
+    private LocalTime calculateNextArriveAt(LocalTime now, LocalTime startTime) {
+        long secondsSinceStart = Duration.between(startTime, now).getSeconds();
+        long intervalSec = interval.getSeconds();
+
+        long nextIntervalIdx = (secondsSinceStart / intervalSec) + 1;
+        return startTime.plus(interval.multipliedBy(nextIntervalIdx));
     }
 
     public Route removeStop(RouteStop stop) {
@@ -88,26 +155,5 @@ public class Route {
 
     public Iterable<RouteStop> getStops() {
         return stops;
-    }
-
-    public static class RouteBuilder {
-        public Route build() {
-            if (name == null || name.isBlank()) {
-                throw new IllegalArgumentException("Name must not be empty");
-            }
-            if (type == null || type.isBlank()) {
-                throw new IllegalArgumentException("Type must not be empty");
-            }
-            if (interval == null || interval.isNegative()) {
-                throw new IllegalArgumentException("Interval must be non-negative");
-            }
-            if (businessHours == null) {
-                throw new IllegalArgumentException("Business hours must not be null");
-            }
-            if (stops == null || stops.size() < 2) {
-                throw new IllegalArgumentException("Stops must contain at least 2 elements");
-            }
-            return new Route(name, type, stops, interval, businessHours);
-        }
     }
 }

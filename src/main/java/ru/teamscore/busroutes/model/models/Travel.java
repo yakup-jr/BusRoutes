@@ -10,14 +10,24 @@ import java.time.LocalTime;
 
 @Getter
 @EqualsAndHashCode
-@Builder(builderClassName = "TravelBuilder")
 public class Travel {
 
     private final Route route;
     private final Duration timeInRoute;
     private final LocalTime nextArrival;
 
+    @Builder
     private Travel(Route route, Duration timeInRoute, LocalTime nextArrival) {
+        if (route == null) {
+            throw new IllegalArgumentException("Route must be non null");
+        }
+        if (timeInRoute.isNegative()) {
+            throw new IllegalArgumentException("Time in route must be non-negative");
+        }
+        if (nextArrival == null) {
+            throw new IllegalArgumentException("Next arrival must be non null");
+        }
+
         this.route = route;
         this.timeInRoute = timeInRoute;
         this.nextArrival = nextArrival;
@@ -25,22 +35,7 @@ public class Travel {
 
     @JsonCreator
     public static Travel valueOf(Route route, Duration timeInRoute, LocalTime nextArrival) {
-        return builder().route(route).timeInRoute(timeInRoute).nextArrival(nextArrival).build();
-    }
-
-    public static class TravelBuilder {
-        public Travel build() {
-            if (route == null) {
-                throw new IllegalArgumentException("Route must be non null");
-            }
-            if (timeInRoute.isNegative()) {
-                throw new IllegalArgumentException("Time in route must be non-negative");
-            }
-            if (nextArrival == null) {
-                throw new IllegalArgumentException("Next arrival must be non null");
-            }
-            return new Travel(route, timeInRoute, nextArrival);
-        }
+        return new Travel(route, timeInRoute, nextArrival);
     }
 
 }
