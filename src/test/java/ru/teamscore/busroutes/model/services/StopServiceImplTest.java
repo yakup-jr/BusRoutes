@@ -70,8 +70,8 @@ class StopServiceImplTest {
             var command = createCreateCommand();
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
 
-            assertThatExceptionOfType(AlreadyExistsException.class)
-                .isThrownBy(() -> stopService.addStop(command));
+            assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
+                () -> stopService.addStop(command));
         }
     }
 
@@ -93,8 +93,8 @@ class StopServiceImplTest {
         void getStopByName_StopNotExists_ThrowException() {
             when(stopRepository.findByName(STOP_NAME)).thenReturn(Optional.empty());
 
-            assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> stopService.getStopByName(STOP_NAME));
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+                () -> stopService.getStopByName(STOP_NAME));
         }
     }
 
@@ -108,12 +108,10 @@ class StopServiceImplTest {
             double newLat = 54.198050;
             double newLon = 51.108750;
 
-            FullUpdateStopCommand command = new FullUpdateStopCommand(
-                newName,
-                new FullUpdateStopCommand.FullUpdateGeographicCommand(newLat, newLon)
-            );
+            FullUpdateStopCommand command = new FullUpdateStopCommand(newName,
+                new FullUpdateStopCommand.FullUpdateGeographicCommand(newLat, newLon));
 
-            when(stopRepository.existsByName(oldName)).thenReturn(true);
+            when(stopRepository.findByName(oldName)).thenReturn(Optional.of(createStopEntity()));
             when(stopRepository.save(any(StopEntity.class))).thenAnswer(i -> i.getArgument(0));
 
             Stop result = stopService.updateStopByName(oldName, command);
@@ -122,20 +120,17 @@ class StopServiceImplTest {
             assertThat(result.getCoordinates().getLatitude()).isEqualTo(newLat);
             assertThat(result.getCoordinates().getLongitude()).isEqualTo(newLon);
 
-            verify(stopRepository).existsByName(oldName);
+            verify(stopRepository).findByName(oldName);
             verify(stopRepository).save(any(StopEntity.class));
         }
 
         @Test
         void updateStopByName_StopNotExists_ThrowException() {
-            FullUpdateStopCommand command = new FullUpdateStopCommand(
-                "Any Name",
-                new FullUpdateStopCommand.FullUpdateGeographicCommand(LAT, LON)
-            );
-            when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
+            FullUpdateStopCommand command = new FullUpdateStopCommand("Any Name",
+                new FullUpdateStopCommand.FullUpdateGeographicCommand(LAT, LON));
 
-            assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> stopService.updateStopByName(STOP_NAME, command));
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+                () -> stopService.updateStopByName(STOP_NAME, command));
 
             verify(stopRepository, never()).save(any());
         }
@@ -157,8 +152,8 @@ class StopServiceImplTest {
         void removeStopByName_StopNotExists_ThrowException() {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
 
-            assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> stopService.removeStopByName(STOP_NAME));
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
+                () -> stopService.removeStopByName(STOP_NAME));
 
             verify(stopRepository, never()).deleteByName(anyString());
         }
@@ -168,8 +163,8 @@ class StopServiceImplTest {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
             when(routeRepository.existsByStop(STOP_NAME)).thenReturn(true);
 
-            assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> stopService.removeStopByName(STOP_NAME));
+            assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+                () -> stopService.removeStopByName(STOP_NAME));
 
             verify(stopRepository, never()).deleteByName(anyString());
         }
@@ -181,15 +176,9 @@ class StopServiceImplTest {
     }
 
     private StopEntity createStopEntity() {
-        return StopEntity.builder()
-            .id(UUID.randomUUID())
-            .name(StopServiceImplTest.STOP_NAME)
+        return StopEntity.builder().id(UUID.randomUUID()).name(StopServiceImplTest.STOP_NAME)
             .geographicCoordinates(
-                GeographicCoordinatesEntity.builder()
-                    .id(UUID.randomUUID())
-                    .latitude(LAT)
-                    .longitude(LON)
-                    .build())
-            .build();
+                GeographicCoordinatesEntity.builder().id(UUID.randomUUID()).latitude(LAT)
+                    .longitude(LON).build()).build();
     }
 }
