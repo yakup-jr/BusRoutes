@@ -21,6 +21,9 @@ public interface StopMapper {
     @Mapping(source = "geographicCoordinates", target = "coordinates")
     Stop map(StopEntity stopEntity);
 
+    @Mapping(target = "geographicCoordinates", source = "coordinates")
+    StopEntity map(FullUpdateStopCommand stopCommand, @MappingTarget StopEntity entity);
+
     Stop map(CreateStopCommand createStopCommand);
 
     Stop map(FullUpdateStopCommand fullUpdateStopCommand);

@@ -46,13 +46,12 @@ public class StopServiceImpl implements StopService {
     @Override
     @Transactional
     public Stop updateStopByName(String oldName, FullUpdateStopCommand updatedStop) {
-        if (!stopRepository.existsByName(oldName)) {
-            throw new NotFoundException(oldName, ItemType.STOP);
-        }
+        StopEntity stopEntity =
+            stopRepository.findByName(oldName)
+                .orElseThrow(() -> new NotFoundException(oldName, ItemType.STOP));
 
-        Stop stopModel = mapper.map(updatedStop);
-        StopEntity mappedStopEntity = mapper.map(stopModel);
-        StopEntity savedStopEntity = stopRepository.save(mappedStopEntity);
+        StopEntity stopToUpdate = mapper.map(updatedStop, stopEntity);
+        StopEntity savedStopEntity = stopRepository.save(stopToUpdate);
         return mapper.map(savedStopEntity);
     }
 

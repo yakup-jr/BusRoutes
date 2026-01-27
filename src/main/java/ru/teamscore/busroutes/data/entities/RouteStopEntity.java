@@ -23,7 +23,7 @@ public class RouteStopEntity {
 
     private int stopOrder;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "stop_id", referencedColumnName = "id")
     private StopEntity stop;
 
@@ -35,18 +35,11 @@ public class RouteStopEntity {
     public final boolean equals(Object o) {
         if (!(o instanceof RouteStopEntity that)) return false;
 
-        return arriveAtFromStart == that.arriveAtFromStart && stopOrder == that.stopOrder &&
-            Objects.equals(id, that.id) && Objects.equals(stop, that.stop) &&
-            Objects.equals(route, that.route);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + arriveAtFromStart;
-        result = 31 * result + stopOrder;
-        result = 31 * result + Objects.hashCode(stop);
-        result = 31 * result + Objects.hashCode(route);
-        return result;
+        return getClass().hashCode();
     }
 }

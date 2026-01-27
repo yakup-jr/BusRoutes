@@ -2,6 +2,7 @@ package ru.teamscore.busroutes.model.mapper;
 
 import org.mapstruct.*;
 import ru.teamscore.busroutes.data.entities.RouteEntity;
+import ru.teamscore.busroutes.model.commands.CreateRouteCommand;
 import ru.teamscore.busroutes.model.models.Route;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public interface RouteMapper {
     @Mapping(source = "stops", target = "stops")
     @Mapping(source = "businessHours", target = "businessHours")
     RouteEntity map(Route route);
+
+    @Mapping(target = "stops", source = "stops")
+    RouteEntity map(CreateRouteCommand command);
 
     List<RouteEntity> map(List<Route> routes);
 

@@ -33,16 +33,11 @@ public class BusinessHoursEntity {
     public final boolean equals(Object o) {
         if (!(o instanceof BusinessHoursEntity that)) return false;
 
-        return Objects.equals(id, that.id) && startAt.equals(that.startAt) &&
-            endAt.equals(that.endAt) && Objects.equals(route, that.route);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + startAt.hashCode();
-        result = 31 * result + endAt.hashCode();
-        result = 31 * result + Objects.hashCode(route);
-        return result;
+        return getClass().hashCode();
     }
 }
