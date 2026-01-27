@@ -149,12 +149,12 @@ class RouteControllerIntegrationTest {
     }
 
     @Test
-    void removeRoute_ReturnNoContent() throws Exception {
+    void deleteRoute_ReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/v1/route/Route1")).andExpect(status().isNoContent());
     }
 
     @Test
-    void removeRoute_Return404() throws Exception {
+    void deleteRoute_Return404() throws Exception {
         mockMvc.perform(delete("/api/v1/route/NonExistingRoute")).andExpect(status().isNotFound());
     }
 }

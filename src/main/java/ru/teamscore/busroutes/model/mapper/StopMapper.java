@@ -9,24 +9,23 @@ import ru.teamscore.busroutes.model.models.Stop;
 import static org.mapstruct.ReportingPolicy.WARN;
 
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy =
-    WARN, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT,
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = WARN,
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT,
     uses = GeographicCoordinatesMapper.class)
 public interface StopMapper {
 
-
     @Mapping(source = "coordinates", target = "geographicCoordinates")
-    StopEntity map(Stop stop);
+    StopEntity toEntity(Stop stop);
 
     @Mapping(source = "geographicCoordinates", target = "coordinates")
-    Stop map(StopEntity stopEntity);
+    Stop toModel(StopEntity stopEntity);
 
     @Mapping(target = "geographicCoordinates", source = "coordinates")
-    StopEntity map(FullUpdateStopCommand stopCommand, @MappingTarget StopEntity entity);
+    StopEntity toEntity(FullUpdateStopCommand stopCommand, @MappingTarget StopEntity entity);
 
-    Stop map(CreateStopCommand createStopCommand);
+    Stop toModel(CreateStopCommand createStopCommand);
 
-    Stop map(FullUpdateStopCommand fullUpdateStopCommand);
+    Stop toModel(FullUpdateStopCommand fullUpdateStopCommand);
 
     @ObjectFactory
     default Stop createStop(StopEntity entity) {

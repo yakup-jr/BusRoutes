@@ -118,7 +118,7 @@ public class Route {
         return startTime.plus(interval.multipliedBy(nextIntervalIdx));
     }
 
-    public Route removeStop(RouteStop stop) {
+    public Route deleteStop(RouteStop stop) {
         List<RouteStop> routeStops = new ArrayList<>(this.stops);
         routeStops.remove(stop);
         return Route.valueOf(name, type, routeStops, interval, businessHours);

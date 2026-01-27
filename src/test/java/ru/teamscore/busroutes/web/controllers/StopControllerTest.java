@@ -114,14 +114,14 @@ class StopControllerTest {
     }
 
     @Test
-    void removeStopByName_ReturnNoContent() throws Exception {
+    void deleteStopByName_ReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/v1/stop/Stop1")).andExpect(status().isNoContent());
     }
 
     @Test
-    void removeStopByName_ReturnNotFound() throws Exception {
+    void deleteStopByName_ReturnNotFound() throws Exception {
         doThrow(new NotFoundException("NonExistingStop", ItemType.STOP)).when(stopService)
-            .removeStopByName("NonExistingStop");
+            .deleteStopByName("NonExistingStop");
 
         mockMvc.perform(delete("/api/v1/stop/NonExistingStop")).andExpect(status().isNotFound())
             .andExpect(jsonPath("$").exists());

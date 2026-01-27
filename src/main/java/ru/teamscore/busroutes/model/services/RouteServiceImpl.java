@@ -16,7 +16,6 @@ import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.RouteMapper;
-import ru.teamscore.busroutes.model.mapper.StopMapper;
 import ru.teamscore.busroutes.model.models.Route;
 import ru.teamscore.busroutes.model.models.Travel;
 
@@ -33,23 +32,22 @@ public class RouteServiceImpl implements RouteService {
     private final Clock clock;
     private final StopRepository stopRepository;
     private final RouteRepository routeRepository;
-    private final StopMapper stopMapper;
     private final RouteMapper mapper;
 
     @Override
     @Transactional
-    public Route addRoute(CreateRouteCommand routeToSave) {
-        if (routeRepository.existsByName(routeToSave.name())) {
+    public Route addRoute(CreateRouteCommand command) {
+        if (routeRepository.existsByName(command.name())) {
             throw new IllegalArgumentException("Route already exists");
         }
 
-        RouteEntity routeEntity = mapper.map(routeToSave);
+        RouteEntity routeEntity = mapper.toEntity(command);
 
-        List<String> stopNames = extractStopNames(routeToSave.stops());
-        Map<String, StopEntity> managedStops = fetchStops(stopNames);
-        buildRouteStopRelation(routeEntity, managedStops);
+        List<String> stopNames = extractStopNames(command.stops());
+        Map<String, StopEntity> stopEntities = getStopEntities(stopNames);
+        buildRouteStopRelations(routeEntity, stopEntities);
 
-        return mapper.map(routeRepository.save(routeEntity));
+        return mapper.toModel(routeRepository.save(routeEntity));
     }
 
     private List<String> extractStopNames(Iterable<RouteStopCommand> stops) {
@@ -57,7 +55,7 @@ public class RouteServiceImpl implements RouteService {
             .toList();
     }
 
-    private Map<String, StopEntity> fetchStops(List<String> stopNames) {
+    private Map<String, StopEntity> getStopEntities(List<String> stopNames) {
         Map<String, StopEntity> stopMap = stopRepository.findAllByNameIn(stopNames).stream()
             .collect(Collectors.toMap(StopEntity::getName, s -> s));
 
@@ -68,8 +66,8 @@ public class RouteServiceImpl implements RouteService {
         return stopMap;
     }
 
-    private void buildRouteStopRelation(RouteEntity routeEntity,
-                                        Map<String, StopEntity> managedStops) {
+    private void buildRouteStopRelations(RouteEntity routeEntity,
+                                         Map<String, StopEntity> managedStops) {
         for (RouteStopEntity routeStop : routeEntity.getStops()) {
             StopEntity managedStop = managedStops.get(routeStop.getStop().getName());
             if (managedStop == null) {
@@ -83,7 +81,7 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional(readOnly = true)
     public List<Travel> getRoutesByStop(String stopName, TravelSortOption sort) {
-        List<Route> routes = mapper.map(routeRepository.findRoutesByStop(stopName));
+        List<Route> routes = mapper.toModels(routeRepository.findRoutesByStop(stopName));
 
         List<Travel> travels =
             routes.stream().map(route -> route.createTravelToLastStop(stopName, clock)).toList();
@@ -97,7 +95,7 @@ public class RouteServiceImpl implements RouteService {
     public List<Travel> getRoutesByStops(String fromStopName, String toStopName,
                                          TravelSortOption sort) {
         List<Route> routes =
-            mapper.map(routeRepository.findRoutesByBothStops(fromStopName, toStopName));
+            mapper.toModels(routeRepository.findRoutesByBothStops(fromStopName, toStopName));
         List<Travel> travels = routes.stream()
             .map(route -> route.createTravelBetweenStops(fromStopName, toStopName, clock)).toList();
 
@@ -116,7 +114,7 @@ public class RouteServiceImpl implements RouteService {
         RouteEntity routeEntity = routeRepository.findByNameWithStops(name)
             .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
 
-        return mapper.map(routeEntity);
+        return mapper.toModel(routeEntity);
     }
 
     @Override
@@ -125,50 +123,50 @@ public class RouteServiceImpl implements RouteService {
         RouteEntity routeEntity = routeRepository.findByNameWithStops(routeName)
             .orElseThrow(() -> new NotFoundException(routeName, ItemType.ROUTE));
 
-        Route routeModel = mapper.map(routeEntity);
+        Route routeModel = mapper.toModel(routeEntity);
         Route copiedModel = routeModel.copy();
         if (isReverseOrder) {
             copiedModel = copiedModel.reverseRoute();
         }
 
-        RouteEntity newRouteEntity = mapper.map(copiedModel);
-        Map<String, StopEntity> managedStops = extractStopEntities(routeEntity);
-        buildRouteStopRelation(newRouteEntity, managedStops);
+        RouteEntity newRouteEntity = mapper.toEntity(copiedModel);
+        Map<String, StopEntity> stopEntities = extractStopEntities(routeEntity);
+        buildRouteStopRelations(newRouteEntity, stopEntities);
         if (newRouteEntity.getBusinessHours() != null) {
             newRouteEntity.getBusinessHours().setId(null);
         }
 
-        return mapper.map(routeRepository.save(newRouteEntity));
+        return mapper.toModel(routeRepository.save(newRouteEntity));
     }
 
     @Override
     @Transactional
-    public Route updateRouteByName(String oldRouteName, FullUpdateRouteCommand routeToUpdate) {
-        if (!oldRouteName.equals(routeToUpdate.name()) &&
-            routeRepository.existsByName(routeToUpdate.name())) {
+    public Route updateRouteByName(String name, FullUpdateRouteCommand command) {
+        if (!name.equals(command.name()) &&
+            routeRepository.existsByName(command.name())) {
             throw new AlreadyExistsException("Route name already exists");
         }
 
-        RouteEntity routeEntity = routeRepository.findByName(oldRouteName)
-            .orElseThrow(() -> new NotFoundException(oldRouteName, ItemType.ROUTE));
+        RouteEntity routeEntity = routeRepository.findByName(name)
+            .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
 
-        routeEntity.setName(routeToUpdate.name());
-        routeEntity.setType(routeToUpdate.type());
-        routeEntity.setInterval(routeToUpdate.interval());
-        routeEntity.getBusinessHours().setStartAt(routeToUpdate.businessHours().startAt());
-        routeEntity.getBusinessHours().setEndAt(routeToUpdate.businessHours().endAt());
+        routeEntity.setName(command.name());
+        routeEntity.setType(command.type());
+        routeEntity.setInterval(command.interval());
+        routeEntity.getBusinessHours().setStartAt(command.businessHours().startAt());
+        routeEntity.getBusinessHours().setEndAt(command.businessHours().endAt());
 
-        List<String> stopNames = extractStopNames(routeToUpdate.stops());
-        Map<String, StopEntity> managedStops = fetchStops(stopNames);
+        List<String> stopNames = extractStopNames(command.stops());
+        Map<String, StopEntity> managedStops = getStopEntities(stopNames);
 
-        updateRouteStops(routeEntity, routeToUpdate.stops(), managedStops);
+        updateRouteStops(routeEntity, command.stops(), managedStops);
 
-        return mapper.map(routeEntity);
+        return mapper.toModel(routeEntity);
     }
 
     @Override
     @Transactional
-    public void removeRoute(String routeName) {
+    public void deleteRoute(String routeName) {
         if (!routeRepository.existsByName(routeName)) {
             throw new NotFoundException(routeName, ItemType.ROUTE);
         }

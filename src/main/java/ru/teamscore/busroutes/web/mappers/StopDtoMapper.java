@@ -16,10 +16,10 @@ import static org.mapstruct.ReportingPolicy.WARN;
     WARN, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
 public interface StopDtoMapper {
 
-    StopDto map(Stop stop);
+    StopDto toDto(Stop stop);
 
-    FullUpdateStopCommand map(FullUpdateStopDto fullUpdateStopDto);
+    FullUpdateStopCommand toCommand(FullUpdateStopDto fullUpdateStopDto);
 
-    CreateStopCommand map(CreateStopDto createStopDto);
+    CreateStopCommand toCommand(CreateStopDto createStopDto);
 
 }

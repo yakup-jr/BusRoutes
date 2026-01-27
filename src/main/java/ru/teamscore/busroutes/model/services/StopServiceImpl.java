@@ -23,15 +23,15 @@ public class StopServiceImpl implements StopService {
 
     @Override
     @Transactional
-    public Stop addStop(CreateStopCommand stop) {
-        if (stopRepository.existsByName(stop.name())) {
+    public Stop addStop(CreateStopCommand command) {
+        if (stopRepository.existsByName(command.name())) {
             throw new AlreadyExistsException("Stop already exists");
         }
 
-        Stop stopModel = mapper.map(stop);
-        StopEntity stopEntity = mapper.map(stopModel);
+        Stop stopModel = mapper.toModel(command);
+        StopEntity stopEntity = mapper.toEntity(stopModel);
         StopEntity savedStopEntity = stopRepository.save(stopEntity);
-        return mapper.map(savedStopEntity);
+        return mapper.toModel(savedStopEntity);
     }
 
     @Override
@@ -40,30 +40,30 @@ public class StopServiceImpl implements StopService {
         StopEntity foundStopEntity = stopRepository.findByName(name)
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
 
-        return mapper.map(foundStopEntity);
+        return mapper.toModel(foundStopEntity);
     }
 
     @Override
     @Transactional
-    public Stop updateStopByName(String oldName, FullUpdateStopCommand updatedStop) {
+    public Stop updateStopByName(String oldName, FullUpdateStopCommand command) {
         StopEntity stopEntity =
             stopRepository.findByName(oldName)
                 .orElseThrow(() -> new NotFoundException(oldName, ItemType.STOP));
 
-        StopEntity stopToUpdate = mapper.map(updatedStop, stopEntity);
+        StopEntity stopToUpdate = mapper.toEntity(command, stopEntity);
         StopEntity savedStopEntity = stopRepository.save(stopToUpdate);
-        return mapper.map(savedStopEntity);
+        return mapper.toModel(savedStopEntity);
     }
 
     @Override
     @Transactional
-    public void removeStopByName(String name) {
+    public void deleteStopByName(String name) {
         if (!stopRepository.existsByName(name)) {
             throw new NotFoundException(name, ItemType.STOP);
         }
         if (routeRepository.existsByStop(name)) {
             throw new IllegalArgumentException(String.format(
-                "%s exists in route. You can't remove stop until it " +
+                "%s exists in route. You can't delete stop until it " +
                     "hasn't relation with any route", name));
         }
         stopRepository.deleteByName(name);

@@ -15,18 +15,18 @@ public interface RouteMapper {
 
     @Mapping(source = "stops", target = "stops")
     @Mapping(source = "businessHours", target = "businessHours")
-    RouteEntity map(Route route);
+    RouteEntity toEntity(Route route);
 
     @Mapping(target = "stops", source = "stops")
-    RouteEntity map(CreateRouteCommand command);
+    RouteEntity toEntity(CreateRouteCommand command);
 
-    List<RouteEntity> map(List<Route> routes);
+    List<RouteEntity> toEntities(List<Route> routes);
 
     @Mapping(source = "stops", target = "stops")
     @Mapping(source = "businessHours", target = "businessHours")
-    Route map(RouteEntity routeEntity);
+    Route toModel(RouteEntity routeEntity);
 
-    List<Route> map(Iterable<RouteEntity> routeEntity);
+    List<Route> toModels(Iterable<RouteEntity> routeEntity);
 
     @ObjectFactory
     default Route createRoute(RouteEntity entity) {

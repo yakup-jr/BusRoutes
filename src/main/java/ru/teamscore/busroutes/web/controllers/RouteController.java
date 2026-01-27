@@ -29,10 +29,11 @@ public class RouteController {
     private final RouteDtoMapper mapper;
 
     @PostMapping("/route")
-    public ResponseEntity<SummaryRouteDto> addRoute(@RequestBody @Valid CreateRouteDto newRoute) {
-        var routeModel = mapper.mapCreateRoute(newRoute);
-        var savedRouteModel = routeService.addRoute(routeModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.mapRoute(savedRouteModel));
+    public ResponseEntity<SummaryRouteDto> addRoute(
+        @RequestBody @Valid CreateRouteDto createRouteDto) {
+        var command = mapper.toCommand(createRouteDto);
+        var savedRouteModel = routeService.addRoute(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(savedRouteModel));
     }
 
     @PostMapping("/route/{routeName}/copy")
@@ -43,7 +44,7 @@ public class RouteController {
                                                          message = "Route name must be between 2 and 255 characters")
                                                      String routeName) {
         Route routeModel = routeService.copyRoute(routeName, isReverseOrder);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.mapRoute(routeModel));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(routeModel));
     }
 
     @GetMapping(value = "/route", params = {"stopName", "sort"})
@@ -53,16 +54,17 @@ public class RouteController {
         String stopName, @RequestParam @NotBlank String sort) {
         List<Travel> travels =
             routeService.getRoutesByStop(stopName, TravelSortOption.valueOf(sort));
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapTravel(travels));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDtos(travels));
     }
 
     @GetMapping(value = "/route", params = {"fromStopName", "toStopName", "sort"})
     public ResponseEntity<Iterable<TravelDto>> getRoutesByStops(@RequestParam String fromStopName,
                                                                 @RequestParam String toStopName,
-                                                                @RequestParam TravelSortOption sort) {
+                                                                @RequestParam
+                                                                TravelSortOption sort) {
         List<Travel> travels =
             routeService.getRoutesByStops(fromStopName, toStopName, sort);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapTravel(travels));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDtos(travels));
     }
 
     @GetMapping("/route/{name}")
@@ -71,25 +73,25 @@ public class RouteController {
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
         String name) {
         Route routeModelByName = routeService.getRouteByName(name);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapRoute(routeModelByName));
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(routeModelByName));
     }
 
     @PutMapping("/route/{name}")
     public ResponseEntity<SummaryRouteDto> updateRouteByName(
         @PathVariable @NotBlank(message = "Route name cannot be empty")
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
-        String name, @RequestBody @Valid FullUpdateRouteDto updatedRoute) {
-        var routeModel = mapper.mapUpdateRoute(updatedRoute);
-        var updatedRouteModel = routeService.updateRouteByName(name, routeModel);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.mapRoute(updatedRouteModel));
+        String name, @RequestBody @Valid FullUpdateRouteDto updateRouteDto) {
+        var command = mapper.toCommand(updateRouteDto);
+        var updatedRouteModel = routeService.updateRouteByName(name, command);
+        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(updatedRouteModel));
     }
 
     @DeleteMapping("/route/{name}")
-    public ResponseEntity<Void> removeRoute(
+    public ResponseEntity<Void> deleteRoute(
         @PathVariable @NotBlank(message = "Route name cannot be empty")
         @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
         String name) {
-        routeService.removeRoute(name);
+        routeService.deleteRoute(name);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

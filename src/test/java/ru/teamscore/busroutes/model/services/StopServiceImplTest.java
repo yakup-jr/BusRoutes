@@ -139,32 +139,32 @@ class StopServiceImplTest {
     @Nested
     class StopRemoval {
         @Test
-        void removeStopByName() {
+        void deleteStopByName() {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
             when(routeRepository.existsByStop(STOP_NAME)).thenReturn(false);
 
-            stopService.removeStopByName(STOP_NAME);
+            stopService.deleteStopByName(STOP_NAME);
 
             verify(stopRepository).deleteByName(STOP_NAME);
         }
 
         @Test
-        void removeStopByName_StopNotExists_ThrowException() {
+        void deleteStopByName_StopNotExists_ThrowException() {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(false);
 
             assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-                () -> stopService.removeStopByName(STOP_NAME));
+                () -> stopService.deleteStopByName(STOP_NAME));
 
             verify(stopRepository, never()).deleteByName(anyString());
         }
 
         @Test
-        void removeStopByName_RouteContainStop_ThrowException() {
+        void deleteStopByName_RouteContainStop_ThrowException() {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
             when(routeRepository.existsByStop(STOP_NAME)).thenReturn(true);
 
             assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-                () -> stopService.removeStopByName(STOP_NAME));
+                () -> stopService.deleteStopByName(STOP_NAME));
 
             verify(stopRepository, never()).deleteByName(anyString());
         }

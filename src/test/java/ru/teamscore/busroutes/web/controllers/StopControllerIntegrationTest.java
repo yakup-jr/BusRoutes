@@ -76,7 +76,7 @@ class StopControllerIntegrationTest {
     }
 
     @Test
-    void removeStopByName_ReturnNoContent() throws Exception {
+    void deleteStopByName_ReturnNoContent() throws Exception {
         CreateStopDto createStopDto =
             new CreateStopDto("NewStop", new GeographicCoordinatesDto(53.198050, 50.108750));
 
@@ -87,12 +87,12 @@ class StopControllerIntegrationTest {
     }
 
     @Test
-    void removeStopByName_StopInRoute_Return400() throws Exception {
+    void deleteStopByName_StopInRoute_Return400() throws Exception {
         mockMvc.perform(delete("/api/v1/stop/Stop1")).andExpect(status().isBadRequest());
     }
 
     @Test
-    void removeStopByName_ReturnNotFound() throws Exception {
+    void deleteStopByName_ReturnNotFound() throws Exception {
         mockMvc.perform(delete("/api/v1/stop/NonExistingStop")).andExpect(status().isNotFound())
             .andExpect(jsonPath("$").exists());
     }

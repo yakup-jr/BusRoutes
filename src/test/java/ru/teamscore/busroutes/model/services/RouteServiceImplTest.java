@@ -97,7 +97,7 @@ class RouteServiceImplTest {
 
         routeService =
             new RouteServiceImpl(Clock.fixed(instant, zoneId), stopRepository, routeRepository,
-                stopMapper, mapper);
+                mapper);
     }
 
     @Nested
@@ -337,20 +337,20 @@ class RouteServiceImplTest {
     @Nested
     class RouteRemoval {
         @Test
-        void removeRoute() {
+        void deleteRoute() {
             when(routeRepository.existsByName(ROUTE_NAME_1)).thenReturn(true);
 
-            routeService.removeRoute(ROUTE_NAME_1);
+            routeService.deleteRoute(ROUTE_NAME_1);
 
             verify(routeRepository).existsByName(ROUTE_NAME_1);
         }
 
         @Test
-        void removeRoute_RouteNotFound_ThrowNotFoundException() {
+        void deleteRoute_RouteNotFound_ThrowNotFoundException() {
             when(routeRepository.existsByName(ROUTE_NAME_1)).thenReturn(false);
 
             assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-                () -> routeService.removeRoute(ROUTE_NAME_1));
+                () -> routeService.deleteRoute(ROUTE_NAME_1));
         }
     }
 

@@ -12,7 +12,7 @@ import ru.teamscore.busroutes.model.models.Stop;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
 public interface GeographicCoordinatesMapper {
 
-    GeographicCoordinatesEntity map(Stop.GeographicCoordinates geographicCoordinates);
+    GeographicCoordinatesEntity toEntity(Stop.GeographicCoordinates geographicCoordinates);
 
-    Stop.GeographicCoordinates map(GeographicCoordinatesEntity geographicCoordinatesEntity);
+    Stop.GeographicCoordinates toModel(GeographicCoordinatesEntity geographicCoordinatesEntity);
 }
