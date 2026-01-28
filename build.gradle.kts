@@ -25,24 +25,27 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+    implementation(libs.spring.data.jpa)
+    implementation(libs.spring.webmvc)
     implementation(libs.mapstruct)
     implementation(libs.spring.validation)
 
-    compileOnly("org.projectlombok:lombok")
+    compileOnly(libs.lombok)
 
-    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly(libs.postgresql)
 
-    annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor(libs.lombok)
     annotationProcessor(libs.mapstruct.processor)
 
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation(libs.spring.data.jpa.test)
+    testImplementation(libs.spring.webmvc.test)
+    testImplementation(libs.tc.junit.jupiter)
+    testImplementation(libs.spring.tc)
+    testImplementation(libs.tc.postgresql)
     testImplementation(libs.assertj.core)
     testImplementation(libs.mockito.core)
 
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly(libs.junit.platform)
 }
 
 tasks.withType<Test> {

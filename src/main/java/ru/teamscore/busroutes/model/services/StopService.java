@@ -5,11 +5,11 @@ import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.models.Stop;
 
 public interface StopService {
-    Stop addStop(CreateStopCommand stop);
+    Stop addStop(CreateStopCommand command);
 
     Stop getStopByName(String name);
 
-    Stop updateStopByName(String name, FullUpdateStopCommand stop);
+    Stop updateStopByName(String name, FullUpdateStopCommand command);
 
-    void removeStopByName(String name);
+    void deleteStopByName(String name);
 }

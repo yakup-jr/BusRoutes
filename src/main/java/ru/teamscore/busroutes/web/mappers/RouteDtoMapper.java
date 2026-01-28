@@ -18,24 +18,24 @@ import static org.mapstruct.ReportingPolicy.WARN;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
 public interface RouteDtoMapper {
 
-    CreateRouteCommand mapCreateRoute(CreateRouteDto createRouteDto);
+    CreateRouteCommand toCommand(CreateRouteDto createRouteDto);
 
-    FullUpdateRouteCommand mapUpdateRoute(FullUpdateRouteDto fullUpdateRouteDto);
+    FullUpdateRouteCommand toCommand(FullUpdateRouteDto fullUpdateRouteDto);
 
     @Mapping(source = "stop.name", target = "stopName")
-    SummaryRouteStopDto mapRouteStop(RouteStop routeStop);
+    SummaryRouteStopDto toDto(RouteStop routeStop);
 
-    Iterable<RouteStopCommand> mapRouteStop(Iterable<SummaryRouteStopDto> routeStopDto);
+    Iterable<RouteStopCommand> toCommands(Iterable<SummaryRouteStopDto> routeStopDto);
 
-    RouteStopCommand mapRouteStop(SummaryRouteStopDto routeStopDto);
+    RouteStopCommand toCommand(SummaryRouteStopDto routeStopDto);
 
     @Mapping(source = "stopName", target = "stopName")
-    SummaryRouteStopDto mapRouteStop(RouteStopCommand routeStop);
+    SummaryRouteStopDto toDto(RouteStopCommand routeStop);
 
-    SummaryRouteDto mapRoute(Route route);
+    SummaryRouteDto toDto(Route route);
 
-    TravelDto mapTravel(Travel travel);
+    TravelDto toDto(Travel travel);
 
-    Iterable<TravelDto> mapTravel(Iterable<Travel> travels);
+    Iterable<TravelDto> toDtos(Iterable<Travel> travels);
 
 }

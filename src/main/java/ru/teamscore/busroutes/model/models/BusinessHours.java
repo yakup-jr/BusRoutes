@@ -9,31 +9,25 @@ import java.time.LocalTime;
 
 @Getter
 @EqualsAndHashCode
-@Builder(builderClassName = "BusinessHoursBuilder")
 public class BusinessHours {
-
     private final LocalTime startAt;
     private final LocalTime endAt;
 
+    @Builder
     private BusinessHours(LocalTime startAt, LocalTime endAt) {
+        if (startAt == null) {
+            throw new IllegalArgumentException("StartAt can't be null");
+        }
+        if (endAt == null) {
+            throw new IllegalArgumentException("EndAt can't be null");
+        }
+
         this.startAt = startAt;
         this.endAt = endAt;
     }
 
     @JsonCreator
     public static BusinessHours valueOf(LocalTime startAt, LocalTime endAt) {
-        return builder().startAt(startAt).endAt(endAt).build();
-    }
-
-    public static class BusinessHoursBuilder {
-        public BusinessHours build() {
-            if (startAt == null) {
-                throw new IllegalArgumentException("StartAt can't be null");
-            }
-            if (endAt == null) {
-                throw new IllegalArgumentException("EndAt can't be null");
-            }
-            return new BusinessHours(startAt, endAt);
-        }
+        return new BusinessHours(startAt, endAt);
     }
 }

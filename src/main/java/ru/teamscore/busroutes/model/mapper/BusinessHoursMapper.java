@@ -9,9 +9,9 @@ import ru.teamscore.busroutes.model.models.BusinessHours;
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
 public interface BusinessHoursMapper {
 
-    BusinessHoursEntity map(BusinessHours businessHours);
+    BusinessHoursEntity toEntity(BusinessHours businessHours);
 
-    BusinessHours map(BusinessHoursEntity entity);
+    BusinessHours toModel(BusinessHoursEntity entity);
 
     @ObjectFactory
     default BusinessHours createBusiness(BusinessHoursEntity entity) {

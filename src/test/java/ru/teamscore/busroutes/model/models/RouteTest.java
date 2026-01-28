@@ -94,7 +94,7 @@ class RouteTest {
     }
 
     @Test
-    void removeStop() {
+    void deleteStop() {
         Stop stop3 =
             Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
         RouteStop s3 = RouteStop.valueOf(240, 3, stop3);
@@ -102,7 +102,7 @@ class RouteTest {
             List.of(stopsRoute.get(0), stopsRoute.get(1), s3),
             Duration.ofMinutes(10), businessHours);
 
-        Route updatedRoute = longRoute.removeStop(stopsRoute.get(0));
+        Route updatedRoute = longRoute.deleteStop(stopsRoute.get(0));
 
         assertThat(updatedRoute.getStopsCount()).isEqualTo(2);
         assertThat(updatedRoute.getStops())
@@ -111,10 +111,10 @@ class RouteTest {
     }
 
     @Test
-    void removeStop_ResultingInTooFewStops_ThrowsException() {
+    void deleteStop_ResultingInTooFewStops_ThrowsException() {
         RouteStop routeStop = stopsRoute.get(0);
         assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> route.removeStop(routeStop));
+            .isThrownBy(() -> route.deleteStop(routeStop));
     }
 
     @Test

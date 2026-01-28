@@ -30,31 +30,22 @@ public class RouteEntity {
     @Column(nullable = false)
     private Duration interval;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "business_hours_id", referencedColumnName = "id")
     private BusinessHoursEntity businessHours;
 
-    @OneToMany(mappedBy = "route")
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteStopEntity> stops;
 
     @Override
     public final boolean equals(Object o) {
         if (!(o instanceof RouteEntity that)) return false;
 
-        return Objects.equals(id, that.id) && name.equals(that.name) &&
-            type.equals(that.type) && interval.equals(that.interval) &&
-            Objects.equals(businessHours, that.businessHours) &&
-            Objects.equals(stops, that.stops);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + name.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + interval.hashCode();
-        result = 31 * result + Objects.hashCode(businessHours);
-        result = 31 * result + Objects.hashCode(stops);
-        return result;
+        return getClass().hashCode();
     }
 }

@@ -32,17 +32,11 @@ public class GeographicCoordinatesEntity {
     public final boolean equals(Object o) {
         if (!(o instanceof GeographicCoordinatesEntity that)) return false;
 
-        return Double.compare(latitude, that.latitude) == 0 &&
-            Double.compare(longitude, that.longitude) == 0 &&
-            Objects.equals(id, that.id) && Objects.equals(stop, that.stop);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + Double.hashCode(latitude);
-        result = 31 * result + Double.hashCode(longitude);
-        result = 31 * result + Objects.hashCode(stop);
-        return result;
+        return getClass().hashCode();
     }
 }

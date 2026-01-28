@@ -7,14 +7,23 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-@Builder(builderClassName = "RouteStopBuilder")
 public class RouteStop {
-
     private final int arriveAtFromStart;
     private final int stopOrder;
     private final Stop stop;
 
+    @Builder
     private RouteStop(int arriveAtFromStart, int stopOrder, Stop stop) {
+        if (arriveAtFromStart < 0) {
+            throw new IllegalArgumentException("Arrive at from start must be non-negative");
+        }
+        if (stopOrder < 0) {
+            throw new IllegalArgumentException("Order must be non-negative");
+        }
+        if (stop == null) {
+            throw new IllegalArgumentException("Stop cannot be null");
+        }
+
         this.arriveAtFromStart = arriveAtFromStart;
         this.stopOrder = stopOrder;
         this.stop = stop;
@@ -22,25 +31,6 @@ public class RouteStop {
 
     @JsonCreator
     public static RouteStop valueOf(int arriveAtFromStart, int stopOrder, Stop stop) {
-        return builder()
-            .arriveAtFromStart(arriveAtFromStart)
-            .stopOrder(stopOrder)
-            .stop(stop)
-            .build();
-    }
-
-    public static class RouteStopBuilder {
-        public RouteStop build() {
-            if (arriveAtFromStart < 0) {
-                throw new IllegalArgumentException("Arrive at from start must be non-negative");
-            }
-            if (stopOrder < 0) {
-                throw new IllegalArgumentException("Order must be non-negative");
-            }
-            if (stop == null) {
-                throw new IllegalArgumentException("Stop cannot be null");
-            }
-            return new RouteStop(arriveAtFromStart, stopOrder, stop);
-        }
+        return new RouteStop(arriveAtFromStart, stopOrder, stop);
     }
 }

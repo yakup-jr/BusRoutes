@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.data.repositories;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,10 +19,14 @@ public interface RouteRepository extends JpaRepository<RouteEntity, UUID> {
 
     Optional<RouteEntity> findByName(String name);
 
-    @Query("select r from RouteEntity r join r.stops rs where rs = :stopName")
+    @EntityGraph(attributePaths = {"stops", "stops.stop"})
+    @Query("SELECT r FROM RouteEntity r WHERE r.name = :name")
+    Optional<RouteEntity> findByNameWithStops(String name);
+
+    @Query("select r from RouteEntity r join r.stops rs where rs.stop.name = :stopName")
     List<RouteEntity> findRoutesByStop(String stopName);
 
-    @Query("select count(r) from RouteEntity r join r.stops rs where rs.stop.name = :stopName")
+    @Query("select count(r) > 0 from RouteEntity r join r.stops rs where rs.stop.name = :stopName")
     boolean existsByStop(String stopName);
 
     @Query("select r from RouteEntity r join r.stops rs1 join r.stops rs2 where rs1.stop.name = " +

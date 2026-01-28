@@ -9,7 +9,7 @@ import ru.teamscore.busroutes.model.models.Travel;
 import java.util.List;
 
 public interface RouteService {
-    Route addRoute(CreateRouteCommand route);
+    Route addRoute(CreateRouteCommand command);
 
     List<Travel> getRoutesByStop(String stopName, TravelSortOption sort);
 
@@ -19,7 +19,7 @@ public interface RouteService {
 
     Route copyRoute(String routeName, boolean isReverseOrder);
 
-    Route updateRouteByName(String oldRouteName, FullUpdateRouteCommand newRoute);
+    Route updateRouteByName(String name, FullUpdateRouteCommand command);
 
-    void removeRoute(String routeName);
+    void deleteRoute(String routeName);
 }

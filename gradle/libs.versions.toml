@@ -2,6 +2,7 @@
 springBoot = "4.0.1"
 springDependencyManagement = "1.1.7"
 mapstruct = "1.6.3"
+tc-postgresql = "1.21.4"
 
 [plugins]
 springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
@@ -13,3 +14,15 @@ mockito-core = { module = "org.mockito:mockito-core" }
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 spring-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+lombok = { module = "org.projectlombok:lombok" }
+postgresql = { module = "org.postgresql:postgresql" }
+
+spring-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
+spring-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+tc-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+spring-tc = { module = "org.springframework.boot:spring-boot-testcontainers" }
+tc-postgresql = { module = "org.testcontainers:postgresql", version.ref = "tc-postgresql" }
+
+junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
