@@ -45,7 +45,7 @@ public class StopController {
         String name, @RequestBody FullUpdateStopDto updateStopDto) {
         var command = mapper.toCommand(updateStopDto);
         var updatedStopModel = stopService.updateStopByName(name, command);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(updatedStopModel));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(updatedStopModel));
     }
 
     @DeleteMapping("/stop/{name}")

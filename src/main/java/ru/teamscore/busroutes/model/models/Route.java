@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 @Getter
@@ -76,9 +77,15 @@ public class Route {
         return createTravel(stopName, lastStopSeconds, clock);
     }
 
-    public Travel createTravelBetweenStops(String fromStopName, String toStopName, Clock clock) {
+    public Optional<Travel> createTravelBetweenStops(String fromStopName, String toStopName,
+                                                    Clock clock) {
         int toSeconds = findStopByName(toStopName).getArriveAtFromStart();
-        return createTravel(fromStopName, toSeconds, clock);
+        Travel travel = createTravel(fromStopName, toSeconds, clock);
+
+        if (travel.getTimeInRoute().isZero()) {
+            return Optional.empty();
+        }
+        return Optional.of(travel);
     }
 
     private Travel createTravel(String fromStopName, int toSeconds, Clock clock) {

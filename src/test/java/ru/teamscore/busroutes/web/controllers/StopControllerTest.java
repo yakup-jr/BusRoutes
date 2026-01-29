@@ -90,7 +90,7 @@ class StopControllerTest {
         when(stopService.updateStopByName("Stop1", fullUpdateStopCommand)).thenReturn(stop);
 
         mockMvc.perform(put("/api/v1/stop/Stop1").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isOk())
+                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("UpdatedStop1"))
             .andExpect(jsonPath("$.coordinates.latitude").value(53.198060))
             .andExpect(jsonPath("$.coordinates.longitude").value(50.108760));

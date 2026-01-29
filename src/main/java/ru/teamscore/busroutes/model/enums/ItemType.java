@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ItemType {
 
     STOP("Stop"),
-    ROUTE("Route");
+    ROUTE("Route"),
+    TRAVEL("Travel");
 
     private final String name;
 

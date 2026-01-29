@@ -135,7 +135,7 @@ class RouteControllerIntegrationTest {
 
         MvcResult result = mockMvc.perform(
                 put("/api/v1/route/Route1").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isOk())
+                    .content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isCreated())
             .andReturn();
 
         SummaryRouteDto response = objectMapper.readValue(result.getResponse().getContentAsString(),

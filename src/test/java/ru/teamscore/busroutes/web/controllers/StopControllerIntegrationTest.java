@@ -57,7 +57,7 @@ class StopControllerIntegrationTest {
             new GeographicCoordinatesDto(53.198060, 50.108760));
 
         mockMvc.perform(put("/api/v1/stop/Stop1").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isOk())
+                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("UpdatedStop1"))
             .andExpect(jsonPath("$.coordinates.latitude").value(53.198060))
             .andExpect(jsonPath("$.coordinates.longitude").value(50.108760));
@@ -88,7 +88,7 @@ class StopControllerIntegrationTest {
 
     @Test
     void deleteStopByName_StopInRoute_Return400() throws Exception {
-        mockMvc.perform(delete("/api/v1/stop/Stop1")).andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/api/v1/stop/Stop1")).andExpect(status().isConflict());
     }
 
     @Test

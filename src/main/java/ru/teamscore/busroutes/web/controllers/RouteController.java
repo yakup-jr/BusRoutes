@@ -83,7 +83,7 @@ public class RouteController {
         String name, @RequestBody @Valid FullUpdateRouteDto updateRouteDto) {
         var command = mapper.toCommand(updateRouteDto);
         var updatedRouteModel = routeService.updateRouteByName(name, command);
-        return ResponseEntity.status(HttpStatus.OK).body(mapper.toDto(updatedRouteModel));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(updatedRouteModel));
     }
 
     @DeleteMapping("/route/{name}")

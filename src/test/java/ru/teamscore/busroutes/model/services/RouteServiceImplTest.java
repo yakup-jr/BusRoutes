@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 import ru.teamscore.busroutes.data.entities.*;
 import ru.teamscore.busroutes.data.repositories.RouteRepository;
@@ -128,7 +127,7 @@ class RouteServiceImplTest {
             CreateRouteCommand command = createRouteCommand();
             when(routeRepository.existsByName(ROUTE_NAME_1)).thenReturn(true);
 
-            assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+            assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
                 () -> routeService.addRoute(command));
         }
 
@@ -151,6 +150,7 @@ class RouteServiceImplTest {
         void getRoutesByStop_TimeInRoute_ReturnSortedByTimeInRoute() {
             when(routeRepository.findRoutesByStop(STOP_NAME_1)).thenReturn(
                 List.of(routeEntity1, routeEntity2));
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(true);
 
             List<Travel> travels =
                 routeService.getRoutesByStop(STOP_NAME_1, TravelSortOption.TIME_IN_ROUTE);
@@ -161,10 +161,9 @@ class RouteServiceImplTest {
 
         @Test
         void getRoutesByStop_TimeInRoute_StopNotExists_ThrowException() {
-            when(routeRepository.findRoutesByStop(STOP_NAME_1)).thenThrow(
-                DataIntegrityViolationException.class);
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(false);
 
-            assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
                 () -> routeService.getRoutesByStop(STOP_NAME_1, TravelSortOption.TIME_IN_ROUTE));
         }
 
@@ -172,6 +171,7 @@ class RouteServiceImplTest {
         void getRoutesByStop_NearestArrival_ReturnSortedByNextArrival() {
             when(routeRepository.findRoutesByStop(STOP_NAME_1)).thenReturn(
                 List.of(routeEntity1, routeEntity2));
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(true);
 
             List<Travel> travels =
                 routeService.getRoutesByStop(STOP_NAME_1, TravelSortOption.NEAREST_ARRIVAL);
@@ -182,10 +182,9 @@ class RouteServiceImplTest {
 
         @Test
         void getRoutesByStop_NearestArrival_StopNotExists_ThrowException() {
-            when(routeRepository.findRoutesByStop(STOP_NAME_1)).thenThrow(
-                DataIntegrityViolationException.class);
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(false);
 
-            assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
                 () -> routeService.getRoutesByStop(STOP_NAME_1, TravelSortOption.NEAREST_ARRIVAL));
         }
     }
@@ -196,6 +195,8 @@ class RouteServiceImplTest {
         void getRoutesByStops_TimeInRoute_ReturnSortedByTimeInRoute() {
             when(routeRepository.findRoutesByBothStops(STOP_NAME_1, STOP_NAME_2)).thenReturn(
                 List.of(routeEntity1, routeEntity2));
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(true);
+            when(stopRepository.existsByName(STOP_NAME_2)).thenReturn(true);
 
             List<Travel> travels = routeService.getRoutesByStops(STOP_NAME_1, STOP_NAME_2,
                 TravelSortOption.TIME_IN_ROUTE);
@@ -208,6 +209,8 @@ class RouteServiceImplTest {
         void getRoutesByStops_NearestArrival_ReturnSortedByNextArrival() {
             when(routeRepository.findRoutesByBothStops(STOP_NAME_1, STOP_NAME_2)).thenReturn(
                 List.of(routeEntity1, routeEntity2));
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(true);
+            when(stopRepository.existsByName(STOP_NAME_2)).thenReturn(true);
 
             List<Travel> travels = routeService.getRoutesByStops(STOP_NAME_1, STOP_NAME_2,
                 TravelSortOption.NEAREST_ARRIVAL);
@@ -217,11 +220,10 @@ class RouteServiceImplTest {
         }
 
         @Test
-        void getRoutesByStops_NearestArrival_StopNotExists_ReturnSortedByNextArrival() {
-            when(routeRepository.findRoutesByBothStops(STOP_NAME_1, STOP_NAME_2)).thenThrow(
-                DataIntegrityViolationException.class);
+        void getRoutesByStops_NearestArrival_StopNotExists_ThrowException() {
+            when(stopRepository.existsByName(STOP_NAME_1)).thenReturn(false);
 
-            assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+            assertThatExceptionOfType(NotFoundException.class).isThrownBy(
                 () -> routeService.getRoutesByStops(STOP_NAME_1, STOP_NAME_2,
                     TravelSortOption.NEAREST_ARRIVAL));
         }
@@ -307,17 +309,17 @@ class RouteServiceImplTest {
         void updateRouteByName_NewRouteAlreadyExists_ThrowException() {
             FullUpdateRouteCommand command =
                 createFullUpdateRouteCommand("route1_updated", Duration.ofMinutes(12));
-            when(routeRepository.existsByName(any(String.class))).thenReturn(true);
+            when(routeRepository.findByName(ROUTE_NAME_1)).thenReturn(Optional.of(routeEntity1));
+            when(routeRepository.existsByName(command.name())).thenReturn(true);
 
             assertThatExceptionOfType(AlreadyExistsException.class).isThrownBy(
-                () -> routeService.updateRouteByName("oldRoute1", command));
+                () -> routeService.updateRouteByName(ROUTE_NAME_1, command));
         }
 
         @Test
         void updateRouteByName_StopNotFound_ThrowNotFoundException() {
             FullUpdateRouteCommand command =
                 createFullUpdateRouteCommand("route1_updated", Duration.ofMinutes(12));
-            when(routeRepository.existsByName("route1_updated")).thenReturn(false);
 
             assertThatExceptionOfType(NotFoundException.class).isThrownBy(
                 () -> routeService.updateRouteByName(ROUTE_NAME_1, command));
@@ -327,7 +329,6 @@ class RouteServiceImplTest {
         void updateRouteByName_NotFound_ThrowNotFoundException() {
             FullUpdateRouteCommand command =
                 createFullUpdateRouteCommand("route1_updated", Duration.ofMinutes(12));
-            when(routeRepository.existsByName(any(String.class))).thenReturn(false);
 
             assertThatExceptionOfType(NotFoundException.class).isThrownBy(
                 () -> routeService.updateRouteByName("nonexistent", command));

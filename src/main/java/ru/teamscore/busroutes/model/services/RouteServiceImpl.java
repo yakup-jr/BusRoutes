@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -38,7 +39,8 @@ public class RouteServiceImpl implements RouteService {
     @Transactional
     public Route addRoute(CreateRouteCommand command) {
         if (routeRepository.existsByName(command.name())) {
-            throw new IllegalArgumentException("Route already exists");
+            throw new AlreadyExistsException(
+                String.format("Route with name %s already exists", command.name()));
         }
 
         RouteEntity routeEntity = mapper.toEntity(command);
@@ -81,6 +83,9 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional(readOnly = true)
     public List<Travel> getRoutesByStop(String stopName, TravelSortOption sort) {
+        if (!stopRepository.existsByName(stopName)) {
+            throw new NotFoundException(stopName, ItemType.STOP);
+        }
         List<Route> routes = mapper.toModels(routeRepository.findRoutesByStop(stopName));
 
         List<Travel> travels =
@@ -94,10 +99,23 @@ public class RouteServiceImpl implements RouteService {
     @Transactional(readOnly = true)
     public List<Travel> getRoutesByStops(String fromStopName, String toStopName,
                                          TravelSortOption sort) {
+        if (!stopRepository.existsByName(fromStopName)) {
+            throw new NotFoundException(fromStopName, ItemType.STOP);
+        }
+        if (!stopRepository.existsByName(toStopName)) {
+            throw new NotFoundException(toStopName, ItemType.STOP);
+        }
+
         List<Route> routes =
             mapper.toModels(routeRepository.findRoutesByBothStops(fromStopName, toStopName));
         List<Travel> travels = routes.stream()
-            .map(route -> route.createTravelBetweenStops(fromStopName, toStopName, clock)).toList();
+            .map(route -> route.createTravelBetweenStops(fromStopName, toStopName, clock))
+            .filter(Optional::isPresent).map(Optional::get).toList();
+
+        if (travels.isEmpty()) {
+            throw new NotFoundException(String.format("from %s to %s", fromStopName, toStopName),
+                ItemType.TRAVEL);
+        }
 
         return sortTravels(travels, sort);
     }
@@ -142,13 +160,13 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public Route updateRouteByName(String name, FullUpdateRouteCommand command) {
-        if (!name.equals(command.name()) &&
-            routeRepository.existsByName(command.name())) {
-            throw new AlreadyExistsException("Route name already exists");
-        }
-
         RouteEntity routeEntity = routeRepository.findByName(name)
             .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
+
+        if (!name.equals(command.name()) && routeRepository.existsByName(command.name())) {
+            throw new AlreadyExistsException(
+                String.format("Route with name %s already exists", command.name()));
+        }
 
         routeEntity.setName(command.name());
         routeEntity.setType(command.type());

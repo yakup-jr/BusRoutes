@@ -15,6 +15,7 @@ import ru.teamscore.busroutes.data.repositories.StopRepository;
 import ru.teamscore.busroutes.model.commands.CreateStopCommand;
 import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
+import ru.teamscore.busroutes.model.exceptions.InUseException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.GeographicCoordinatesMapper;
 import ru.teamscore.busroutes.model.mapper.StopMapper;
@@ -163,7 +164,7 @@ class StopServiceImplTest {
             when(stopRepository.existsByName(STOP_NAME)).thenReturn(true);
             when(routeRepository.existsByStop(STOP_NAME)).thenReturn(true);
 
-            assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+            assertThatExceptionOfType(InUseException.class).isThrownBy(
                 () -> stopService.deleteStopByName(STOP_NAME));
 
             verify(stopRepository, never()).deleteByName(anyString());
