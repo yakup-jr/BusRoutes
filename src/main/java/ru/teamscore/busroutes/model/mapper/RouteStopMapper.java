@@ -23,8 +23,8 @@ public interface RouteStopMapper {
 
     @ObjectFactory
     default RouteStop createRouteStop(RouteStopEntity entity) {
-        return RouteStop.valueOf(entity.getArriveAtFromStart(), entity.getStopOrder(),
-            null);
+        return RouteStop.builder().arriveAtFromStart(entity.getArriveAtFromStart())
+            .stopOrder(entity.getStopOrder()).build();
     }
 
 }

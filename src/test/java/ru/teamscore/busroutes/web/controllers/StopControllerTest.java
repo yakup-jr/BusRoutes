@@ -43,23 +43,27 @@ class StopControllerTest {
 
     @Test
     void addStop() throws Exception {
-        CreateStopDto createStopDto =
-            new CreateStopDto("Stop1", new GeographicCoordinatesDto(53.198050, 50.108750));
-        Stop stop = Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        CreateStopDto createStopDto = CreateStopDto.builder().name("Stop1").coordinates(
+                GeographicCoordinatesDto.builder().latitude(53.198050).longitude(50.108750).build())
+            .build();
+        Stop stop = Stop.builder().name("Stop1").coordinates(
+                Stop.GeographicCoordinates.builder().latitude(53.198050).longitude(50.108750).build())
+            .build();
 
         when(stopService.addStop(any(CreateStopCommand.class))).thenReturn(stop);
 
         mockMvc.perform(post("/api/v1/stop").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createStopDto)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.name").value("Stop1"))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Stop1"))
             .andExpect(jsonPath("$.coordinates.latitude").value(53.198050))
             .andExpect(jsonPath("$.coordinates.longitude").value(50.108750));
     }
 
     @Test
     void getStopByName_ReturnStop() throws Exception {
-        Stop stop = Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        Stop stop = Stop.builder().name("Stop1").coordinates(
+                Stop.GeographicCoordinates.builder().latitude(53.198050).longitude(50.108750).build())
+            .build();
 
         when(stopService.getStopByName(any(String.class))).thenReturn(stop);
 
@@ -80,27 +84,34 @@ class StopControllerTest {
 
     @Test
     void updateStopByName_ReturnUpdatedStop() throws Exception {
-        FullUpdateStopDto fullUpdateStopDto = new FullUpdateStopDto("UpdatedStop1",
-            new GeographicCoordinatesDto(53.198060, 50.108760));
+        FullUpdateStopDto fullUpdateStopDto = FullUpdateStopDto.builder().name("UpdatedStop1")
+            .coordinates(
+                GeographicCoordinatesDto.builder().latitude(53.198060).longitude(50.108760).build())
+            .build();
         FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("UpdatedStop1",
             new FullUpdateStopCommand.FullUpdateGeographicCommand(53.198060, 50.108760));
-        Stop stop = Stop.valueOf("UpdatedStop1", Stop.GeographicCoordinates.valueOf(53.198060,
-            50.108760));
+        Stop stop = Stop.builder().name("UpdatedStop1").coordinates(
+                Stop.GeographicCoordinates.builder().latitude(53.198060).longitude(50.108760).build())
+            .build();
 
         when(stopService.updateStopByName("Stop1", fullUpdateStopCommand)).thenReturn(stop);
 
         mockMvc.perform(put("/api/v1/stop/Stop1").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isCreated())
-            .andExpect(jsonPath("$.name").value("UpdatedStop1"))
+                .content(objectMapper.writeValueAsString(fullUpdateStopDto)))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("UpdatedStop1"))
             .andExpect(jsonPath("$.coordinates.latitude").value(53.198060))
             .andExpect(jsonPath("$.coordinates.longitude").value(50.108760));
     }
 
     @Test
     void updateStopByName_ReturnNotFound() throws Exception {
-        FullUpdateStopDto fullUpdateStopDto =
-            new FullUpdateStopDto("UpdatedStop1", new GeographicCoordinatesDto(53.198060,
-                50.108760));
+        FullUpdateStopDto fullUpdateStopDto = FullUpdateStopDto.builder()
+            .name("UpdatedStop1")
+            .coordinates(
+                GeographicCoordinatesDto.builder()
+                    .latitude(53.198060)
+                    .longitude(50.108760).build())
+            .build();
         FullUpdateStopCommand fullUpdateStopCommand = new FullUpdateStopCommand("UpdatedStop1",
             new FullUpdateStopCommand.FullUpdateGeographicCommand(53.198060, 50.108760));
 
@@ -109,8 +120,7 @@ class StopControllerTest {
 
         mockMvc.perform(put("/api/v1/stop/NonExistingStop").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(fullUpdateStopDto)))
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$").exists());
+            .andExpect(status().isNotFound()).andExpect(jsonPath("$").exists());
     }
 
     @Test

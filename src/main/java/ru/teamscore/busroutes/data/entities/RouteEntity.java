@@ -21,7 +21,6 @@ public class RouteEntity {
     @Column(nullable = false)
     private UUID id;
 
-    @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)

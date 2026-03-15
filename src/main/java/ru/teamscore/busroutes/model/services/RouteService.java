@@ -7,6 +7,7 @@ import ru.teamscore.busroutes.model.models.Route;
 import ru.teamscore.busroutes.model.models.Travel;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface RouteService {
     Route addRoute(CreateRouteCommand command);
@@ -15,11 +16,11 @@ public interface RouteService {
 
     List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort);
 
-    Route getRouteByName(String name);
+    Iterable<Route> getRouteByName(String name);
 
-    Route copyRoute(String routeName, boolean isReverseOrder);
+    Route copyRoute(UUID routeId, boolean isReverseOrder);
 
-    Route updateRouteByName(String name, FullUpdateRouteCommand command);
+    Route updateRoute(UUID routeId, FullUpdateRouteCommand command);
 
     void deleteRoute(String routeName);
 }

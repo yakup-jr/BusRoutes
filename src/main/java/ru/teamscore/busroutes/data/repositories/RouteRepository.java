@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import ru.teamscore.busroutes.data.entities.RouteEntity;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -17,11 +16,11 @@ public interface RouteRepository extends JpaRepository<RouteEntity, UUID> {
 
     boolean existsByName(String name);
 
-    Optional<RouteEntity> findByName(String name);
+    Iterable<RouteEntity> findByName(String name);
 
     @EntityGraph(attributePaths = {"stops", "stops.stop"})
-    @Query("SELECT r FROM RouteEntity r WHERE r.name = :name")
-    Optional<RouteEntity> findByNameWithStops(String name);
+    @Query("select r from RouteEntity r where r.name = :name")
+    Iterable<RouteEntity> findByNameWithStops(String name);
 
     @Query("select r from RouteEntity r join r.stops rs where rs.stop.name = :stopName")
     List<RouteEntity> findRoutesByStop(String stopName);

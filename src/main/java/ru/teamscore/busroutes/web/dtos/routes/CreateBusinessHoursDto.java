@@ -4,15 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.time.LocalTime;
-import java.util.UUID;
 
 @Builder
-public record BusinessHoursDto(
-    @NotNull
-    UUID id,
-    @NotNull
-    LocalTime startAt,
-    @NotNull
-    LocalTime endAt
-) {
+public record CreateBusinessHoursDto(@NotNull LocalTime startAt, @NotNull LocalTime endAt) {
 }

@@ -31,8 +31,8 @@ public class StopController {
 
     @GetMapping("/stop/{name}")
     public ResponseEntity<StopDto> getStopByName(
-        @PathVariable @NotBlank(message = "Route name cannot be empty")
-        @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
+        @PathVariable @NotBlank(message = "Stop name cannot be empty")
+        @Length(min = 2, max = 255, message = "Stop name must be between 2 and 255 characters")
         String name) {
         return ResponseEntity.status(HttpStatus.OK)
             .body(mapper.toDto(stopService.getStopByName(name)));
@@ -40,8 +40,8 @@ public class StopController {
 
     @PutMapping("/stop/{name}")
     public ResponseEntity<StopDto> updateStopByName(
-        @PathVariable @NotBlank(message = "Route name cannot be empty")
-        @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
+        @PathVariable @NotBlank(message = "Stop name cannot be empty")
+        @Length(min = 2, max = 255, message = "Stop name must be between 2 and 255 characters")
         String name, @RequestBody FullUpdateStopDto updateStopDto) {
         var command = mapper.toCommand(updateStopDto);
         var updatedStopModel = stopService.updateStopByName(name, command);
@@ -50,8 +50,8 @@ public class StopController {
 
     @DeleteMapping("/stop/{name}")
     public ResponseEntity<Void> deleteStopByName(
-        @PathVariable @NotBlank(message = "Route name cannot be empty")
-        @Length(min = 2, max = 255, message = "Route name must be between 2 and 255 characters")
+        @PathVariable @NotBlank(message = "Stop name cannot be empty")
+        @Length(min = 2, max = 255, message = "Stop name must be between 2 and 255 characters")
         String name) {
         stopService.deleteStopByName(name);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

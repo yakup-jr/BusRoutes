@@ -15,7 +15,8 @@ public interface BusinessHoursMapper {
 
     @ObjectFactory
     default BusinessHours createBusiness(BusinessHoursEntity entity) {
-        return BusinessHours.valueOf(entity.getStartAt(), entity.getEndAt());
+        return BusinessHours.builder().startAt(entity.getStartAt()).endAt(entity.getEndAt())
+            .build();
     }
 
 }

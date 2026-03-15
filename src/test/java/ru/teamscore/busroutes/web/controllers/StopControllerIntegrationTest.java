@@ -27,7 +27,13 @@ class StopControllerIntegrationTest {
     @Test
     void addStop() throws Exception {
         CreateStopDto createStopDto =
-            new CreateStopDto("NewStop", new GeographicCoordinatesDto(53.198050, 50.108750));
+            CreateStopDto.builder()
+                .name("NewStop")
+                .coordinates(
+                    GeographicCoordinatesDto.builder()
+                        .latitude(53.198050)
+                        .longitude(50.108750).build())
+                .build();
 
         mockMvc.perform(post("/api/v1/stop").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createStopDto)))
@@ -53,11 +59,17 @@ class StopControllerIntegrationTest {
 
     @Test
     void updateStopByName_ReturnUpdatedStop() throws Exception {
-        FullUpdateStopDto fullUpdateStopDto = new FullUpdateStopDto("UpdatedStop1",
-            new GeographicCoordinatesDto(53.198060, 50.108760));
+        FullUpdateStopDto fullUpdateStopDto = FullUpdateStopDto.builder()
+            .name("UpdatedStop1")
+            .coordinates(
+                GeographicCoordinatesDto.builder()
+                    .latitude(53.198060)
+                    .longitude(50.108760).build())
+            .build();
 
         mockMvc.perform(put("/api/v1/stop/Stop1").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fullUpdateStopDto))).andExpect(status().isCreated())
+                .content(objectMapper.writeValueAsString(fullUpdateStopDto)))
+            .andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("UpdatedStop1"))
             .andExpect(jsonPath("$.coordinates.latitude").value(53.198060))
             .andExpect(jsonPath("$.coordinates.longitude").value(50.108760));
@@ -66,8 +78,13 @@ class StopControllerIntegrationTest {
     @Test
     void updateStopByName_ReturnNotFound() throws Exception {
         FullUpdateStopDto fullUpdateStopDto =
-            new FullUpdateStopDto("UpdatedStop1", new GeographicCoordinatesDto(53.198060,
-                50.108760));
+            FullUpdateStopDto.builder()
+                .name("UpdatedStop1")
+                .coordinates(
+                    GeographicCoordinatesDto.builder()
+                        .latitude(53.198060)
+                        .longitude(50.108760).build())
+                .build();
 
         mockMvc.perform(put("/api/v1/stop/NonExistingStop").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(fullUpdateStopDto)))
@@ -78,7 +95,13 @@ class StopControllerIntegrationTest {
     @Test
     void deleteStopByName_ReturnNoContent() throws Exception {
         CreateStopDto createStopDto =
-            new CreateStopDto("NewStop", new GeographicCoordinatesDto(53.198050, 50.108750));
+            CreateStopDto.builder()
+                .name("NewStop")
+                .coordinates(
+                    GeographicCoordinatesDto.builder()
+                        .latitude(53.198050)
+                        .longitude(50.108750).build())
+                .build();
 
         mockMvc.perform(post("/api/v1/stop").contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(createStopDto)));

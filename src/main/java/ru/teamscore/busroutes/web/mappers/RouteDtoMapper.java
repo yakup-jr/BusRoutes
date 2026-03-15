@@ -34,6 +34,8 @@ public interface RouteDtoMapper {
 
     SummaryRouteDto toDto(Route route);
 
+    Iterable<SummaryRouteDto> toRouteDtos(Iterable<Route> routes);
+
     TravelDto toDto(Travel travel);
 
     Iterable<TravelDto> toDtos(Iterable<Travel> travels);

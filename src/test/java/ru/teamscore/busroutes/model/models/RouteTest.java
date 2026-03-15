@@ -17,10 +17,12 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 class RouteTest {
-    private static final Stop stop1 =
-        Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-    private static final Stop stop2 =
-        Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
+    private static final Stop stop1 = Stop.builder().name("Stop1").coordinates(
+            Stop.GeographicCoordinates.builder().latitude(53.198050).longitude(50.108750).build())
+        .build();
+    private static final Stop stop2 = Stop.builder().name("Stop2").coordinates(
+            Stop.GeographicCoordinates.builder().latitude(53.195873).longitude(50.104954).build())
+        .build();
     private List<RouteStop> stopsRoute;
     private BusinessHours businessHours;
     private Route route;
@@ -28,37 +30,35 @@ class RouteTest {
 
     @BeforeEach
     void setUp() {
-        stopsRoute = List.of(RouteStop.valueOf(0, 1, stop1),
-            RouteStop.valueOf(120, 2, stop2));
+        stopsRoute =
+            List.of(RouteStop.builder().arriveAtFromStart(0).stopOrder(1).stop(stop1).build(),
+                RouteStop.builder().arriveAtFromStart(120).stopOrder(2).stop(stop2).build());
         businessHours =
-            BusinessHours.valueOf(LocalTime.of(5, 30), LocalTime.of(23, 0));
-
-        route = Route.valueOf("route1", "bus", stopsRoute, Duration.ofMinutes(10), businessHours);
+            BusinessHours.builder().startAt(LocalTime.of(5, 30)).endAt(LocalTime.of(23, 0)).build();
+        route = Route.builder().name("route1").type("bus").stops(stopsRoute)
+            .interval(Duration.ofMinutes(10)).businessHours(businessHours).build();
     }
 
     @ParameterizedTest
     @MethodSource("provideValueOf")
-    void valueOf(String name, String type, Iterable<RouteStop> stops,
-                 Duration interval,
+    void valueOf(String name, String type, Iterable<RouteStop> stops, Duration interval,
                  BusinessHours businessHours, String expectedFieldNameInException) {
         assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
-                () -> Route.valueOf(name,
-                    type, stops, interval, businessHours))
+                () -> Route.builder().name(name).type(type).stops(stops).interval(interval)
+                    .businessHours(businessHours).build())
             .withMessageContaining(expectedFieldNameInException);
     }
 
     private static Stream<Arguments> provideValueOf() {
-        RouteStop s1 = RouteStop.valueOf(0, 0, stop1);
-        RouteStop s2 = RouteStop.valueOf(15, 1, stop2);
+        RouteStop s1 = RouteStop.builder().arriveAtFromStart(0).stopOrder(0).stop(stop1).build();
+        RouteStop s2 = RouteStop.builder().arriveAtFromStart(15).stopOrder(1).stop(stop2).build();
         List<RouteStop> validStops = List.of(s1, s2);
 
         Duration validInterval = Duration.ofMinutes(15);
-        BusinessHours validHours = BusinessHours.valueOf(
-            LocalTime.of(9, 0), LocalTime.of(17, 0)
-        );
+        BusinessHours validHours =
+            BusinessHours.builder().startAt(LocalTime.of(9, 0)).endAt(LocalTime.of(17, 0)).build();
 
-        return Stream.of(
-            Arguments.of(null, "Bus", validStops, validInterval, validHours, "Name"),
+        return Stream.of(Arguments.of(null, "Bus", validStops, validInterval, validHours, "Name"),
             Arguments.of("", "Bus", validStops, validInterval, validHours, "Name"),
 
             Arguments.of("Line 1", null, validStops, validInterval, validHours, "Type"),
@@ -71,15 +71,16 @@ class RouteTest {
             Arguments.of("Line 1", "Bus", List.of(s1), validInterval, validHours, "Stops"),
 
             Arguments.of("Line 1", "Bus", Collections.emptyList(), validInterval, validHours,
-                "Stops")
-        );
+                "Stops"));
     }
 
     @Test
     void addStop_ReturnNewStop() {
-        Stop stop3 = Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(53.198050,
-            50.108750));
-        RouteStop routeStop3 = RouteStop.valueOf(240, 3, stop3);
+        Stop stop3 = Stop.builder().name("Stop3").coordinates(
+                Stop.GeographicCoordinates.builder().latitude(53.198050).longitude(50.108750).build())
+            .build();
+        RouteStop routeStop3 =
+            RouteStop.builder().arriveAtFromStart(240).stopOrder(3).stop(stop3).build();
 
         Route updatedRoute = route.addStop(routeStop3);
 
@@ -95,48 +96,56 @@ class RouteTest {
 
     @Test
     void deleteStop() {
-        Stop stop3 =
-            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
-        RouteStop s3 = RouteStop.valueOf(240, 3, stop3);
-        Route longRoute = Route.valueOf("route1", "bus",
-            List.of(stopsRoute.get(0), stopsRoute.get(1), s3),
-            Duration.ofMinutes(10), businessHours);
+        Stop stop3 = Stop.builder().name("Stop3").coordinates(
+                Stop.GeographicCoordinates.builder().latitude(54.198050).longitude(51.108750).build())
+            .build();
+        RouteStop s3 = RouteStop.builder().arriveAtFromStart(240).stopOrder(3).stop(stop3).build();
+        Route longRoute = Route.builder()
+            .name("route1")
+            .type("bus")
+            .stops(List.of(stopsRoute.get(0), stopsRoute.get(1), s3))
+            .interval(Duration.ofMinutes(10))
+            .businessHours(businessHours).build();
 
         Route updatedRoute = longRoute.deleteStop(stopsRoute.get(0));
 
         assertThat(updatedRoute.getStopsCount()).isEqualTo(2);
-        assertThat(updatedRoute.getStops())
-            .extracting("stop").extracting("name")
+        assertThat(updatedRoute.getStops()).extracting("stop").extracting("name")
             .containsExactly("Stop2", "Stop3");
     }
 
     @Test
     void deleteStop_ResultingInTooFewStops_ThrowsException() {
         RouteStop routeStop = stopsRoute.get(0);
-        assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> route.deleteStop(routeStop));
+        assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(
+            () -> route.deleteStop(routeStop));
     }
 
     @Test
     void reverseRoute_WithMultipleStops() {
-        Stop stop3 =
-            Stop.valueOf("Stop3", Stop.GeographicCoordinates.valueOf(54.198050, 51.108750));
-        RouteStop s1 = RouteStop.valueOf(0, 1, stop1);
-        RouteStop s2 = RouteStop.valueOf(10, 2, stop2);
-        RouteStop s3 = RouteStop.valueOf(25, 3, stop3);
+        Stop stop3 = Stop.builder()
+            .name("Stop3")
+            .coordinates(
+                Stop.GeographicCoordinates.builder().latitude(54.198050).longitude(51.108750)
+                    .build())
+            .build();
+        RouteStop s1 = RouteStop.builder().arriveAtFromStart(0).stopOrder(1).stop(stop1).build();
+        RouteStop s2 =
+            RouteStop.builder().arriveAtFromStart(10).stopOrder(2).stop(stop2).build();
+        RouteStop s3 =
+            RouteStop.builder().arriveAtFromStart(25).stopOrder(3).stop(stop3).build();
 
-        Route route2 = Route.valueOf("Route", "bus", List.of(s1, s2, s3),
-            Duration.ofMinutes(10), businessHours);
+        Route route2 = Route.builder()
+            .name("Route")
+            .type("bus")
+            .stops(List.of(s1, s2, s3))
+            .interval(Duration.ofMinutes(10))
+            .businessHours(businessHours).build();
 
         Route reversed = route2.reverseRoute();
 
-        assertThat(reversed.getStops())
-            .extracting("arriveAtFromStart", "stopOrder")
-            .containsExactly(
-                tuple(0, 1),
-                tuple(10, 2),
-                tuple(25, 3)
-            );
+        assertThat(reversed.getStops()).extracting("arriveAtFromStart", "stopOrder")
+            .containsExactly(tuple(0, 1), tuple(10, 2), tuple(25, 3));
         assertThat(reversed.getStops()).extracting("stop").extracting("name")
             .containsExactly("Stop3", "Stop2", "Stop1");
     }
@@ -155,8 +164,6 @@ class RouteTest {
 
     @Test
     void getStops() {
-        assertThat(route.getStops())
-            .hasSize(2)
-            .containsExactlyElementsOf(stopsRoute);
+        assertThat(route.getStops()).hasSize(2).containsExactlyElementsOf(stopsRoute);
     }
 }
