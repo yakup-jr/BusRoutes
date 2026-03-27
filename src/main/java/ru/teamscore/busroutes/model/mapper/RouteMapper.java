@@ -30,7 +30,8 @@ public interface RouteMapper {
 
     @ObjectFactory
     default Route createRoute(RouteEntity entity) {
-        return Route.valueOf(entity.getName(), entity.getType(), null, entity.getInterval(), null);
+        return Route.builder().id(entity.getId()).name(entity.getName()).type(entity.getType())
+            .interval(entity.getInterval()).build();
     }
 
 }

@@ -4,16 +4,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import org.hibernate.validator.constraints.Length;
+
+import java.util.UUID;
 
 @Builder
-public record StopDto(
-    @NotNull
-    @NotBlank(message = "name must be not blank")
-    @Length(min = 2, max = 255, message = "Length must be in range 2-255 chars (without blank)")
-    String name,
-    @NotNull
-    @Valid
-    GeographicCoordinatesDto coordinates
-) {
+public record StopDto(@NotNull UUID id,
+                      @NotNull @NotBlank(message = "name must be not blank") String name,
+                      @NotNull @Valid GeographicCoordinatesDto coordinates) {
 }

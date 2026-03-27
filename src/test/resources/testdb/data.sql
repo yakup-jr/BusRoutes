@@ -38,7 +38,7 @@ values (gen_random_uuid(), '06:00:00', '23:00:00'),
        (gen_random_uuid(), '08:00:00', '20:00:00');
 
 insert into transport.t_route (id, name, type, interval, business_hours_id)
-values (gen_random_uuid(), 'Route1', 'Bus', 600000000000,
+values ('859de1e9-57ab-4481-818d-20ac979ff02a', 'Route1', 'Bus', 600000000000,
         (select id from transport.t_business_hours where start_at = '06:00:00'));
 
 insert into transport.t_route (id, name, type, interval, business_hours_id)

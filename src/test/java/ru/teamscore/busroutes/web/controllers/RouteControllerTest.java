@@ -23,6 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,39 +50,40 @@ class RouteControllerTest {
     private Route route1;
     private Travel travel1;
 
+    private static final CreateBusinessHoursDto CREATE_BUSINESS_HOURS_DTO =
+        CreateBusinessHoursDto.builder().startAt(LocalTime.of(6, 0)).endAt(LocalTime.of(23, 0))
+            .build();
     private static final BusinessHoursDto BUSINESS_HOURS_DTO =
-        new BusinessHoursDto(LocalTime.of(5, 30), LocalTime.of(23, 0));
+        BusinessHoursDto.builder().id(UUID.randomUUID()).startAt(LocalTime.of(5, 30)).endAt(LocalTime.of(23, 0)).build();
     private static final List<SummaryRouteStopDto> ROUTE_STOP_DTOS = List.of(
-        new SummaryRouteStopDto(0, 1, "Stop1"),
-        new SummaryRouteStopDto(120, 2, "Stop2")
-    );
-    private static final SummaryRouteDto SUMMARY_ROUTE_DTO = new SummaryRouteDto(
-        "route1",
-        "bus",
-        Duration.ofMinutes(10),
-        BUSINESS_HOURS_DTO,
-        ROUTE_STOP_DTOS
-    );
-    private static final CreateRouteDto CREATE_ROUTE_DTO = new CreateRouteDto(
-        "route1", "bus", Duration.ofMinutes(10), BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS
-    );
+        SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(0).stopOrder(1)
+            .stopName("Stop1").build(),
+        SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(120).stopOrder(2)
+            .stopName("Stop2").build());
+    private static final SummaryRouteDto SUMMARY_ROUTE_DTO =
+        SummaryRouteDto.builder().name("route1").type("bus").interval(Duration.ofMinutes(10))
+            .businessHours(BUSINESS_HOURS_DTO).stops(ROUTE_STOP_DTOS).build();
+    private static final CreateRouteDto CREATE_ROUTE_DTO =
+        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), CREATE_BUSINESS_HOURS_DTO,
+            ROUTE_STOP_DTOS);
 
     @BeforeEach
     void setUp() {
-        Stop s1 = Stop.valueOf("Stop1", Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
-        Stop s2 = Stop.valueOf("Stop2", Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
+        Stop s1 = Stop.valueOf(UUID.randomUUID(), "Stop1",
+            Stop.GeographicCoordinates.valueOf(53.198050, 50.108750));
+        Stop s2 = Stop.valueOf(UUID.randomUUID(), "Stop2",
+            Stop.GeographicCoordinates.valueOf(53.195873, 50.104954));
 
-        List<RouteStop> stopsRoute1 = List.of(
-            RouteStop.valueOf(0, 1, s1),
-            RouteStop.valueOf(120, 2, s2)
-        );
+        List<RouteStop> stopsRoute1 = List.of(RouteStop.valueOf(UUID.randomUUID(), 0, 1, s1),
+            RouteStop.valueOf(UUID.randomUUID(), 120, 2, s2));
 
-        BusinessHours businessHours = BusinessHours.valueOf(
-            BUSINESS_HOURS_DTO.startAt(),
-            BUSINESS_HOURS_DTO.endAt()
-        );
+        BusinessHours businessHours =
+            BusinessHours.valueOf(UUID.randomUUID(), BUSINESS_HOURS_DTO.startAt(),
+                BUSINESS_HOURS_DTO.endAt());
 
-        route1 = Route.valueOf("route1", "bus", stopsRoute1, Duration.ofMinutes(10), businessHours);
+        route1 =
+            Route.valueOf(UUID.randomUUID(), "route1", "bus", stopsRoute1, Duration.ofMinutes(10),
+                businessHours);
         travel1 = Travel.valueOf(route1, Duration.ofMinutes(10), LocalTime.of(6, 0));
     }
 
@@ -89,62 +91,62 @@ class RouteControllerTest {
     void addRoute_ReturnCreated() throws Exception {
         when(routeService.addRoute(any(CreateRouteCommand.class))).thenReturn(route1);
 
-        MvcResult mvcResult =
-            mockMvc.perform(post("/api/v1/route").contentType(MediaType.APPLICATION_JSON)
+        MvcResult mvcResult = mockMvc.perform(
+                post("/api/v1/route").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(CREATE_ROUTE_DTO)))
-                .andExpect(status().isCreated()).andReturn();
+            .andExpect(status().isCreated()).andReturn();
 
         SummaryRouteDto routeDto =
             objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
                 SummaryRouteDto.class);
         assertThat(routeDto.name()).isEqualTo(CREATE_ROUTE_DTO.name());
         assertThat(routeDto.type()).isEqualTo(CREATE_ROUTE_DTO.type());
-        assertThat(routeDto.businessHours()).isEqualTo(CREATE_ROUTE_DTO.businessHours());
+        assertThat(routeDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(BUSINESS_HOURS_DTO);
         assertThat(routeDto.interval()).isEqualTo(CREATE_ROUTE_DTO.interval());
-        assertThat(routeDto.stops()).isEqualTo(ROUTE_STOP_DTOS);
+        assertThat(routeDto.stops()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(ROUTE_STOP_DTOS);
     }
 
     @Test
     void copyRoute_ReturnCreated() throws Exception {
         Route reversedRoute = route1.copy().reverseRoute();
-        when(routeService.copyRoute(any(String.class), eq(true))).thenReturn(reversedRoute);
+        when(routeService.copyRoute(any(UUID.class), eq(true))).thenReturn(reversedRoute);
 
-        MvcResult mvcResult =
-            mockMvc.perform(post("/api/v1/route/route1/copy").param("isReverseOrder", "true")
-                    .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
-                .andReturn();
+        MvcResult mvcResult = mockMvc.perform(
+                post(String.format("/api/v1/route/%s/copy", route1.getId().toString())).param(
+                    "isReverseOrder", "true").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isCreated()).andReturn();
 
         SummaryRouteDto responseRouteDto =
             objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
                 SummaryRouteDto.class);
         assertThat(responseRouteDto.name()).isEqualTo(
             String.format("%s_copy", SUMMARY_ROUTE_DTO.name()));
-        assertThat(responseRouteDto.type()).isEqualTo(SUMMARY_ROUTE_DTO.type());
-        assertThat(responseRouteDto.businessHours()).isEqualTo(SUMMARY_ROUTE_DTO.businessHours());
+        assertThat(responseRouteDto.type()).isEqualTo("bus");
+        assertThat(responseRouteDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(SUMMARY_ROUTE_DTO.businessHours());
         assertThat(responseRouteDto.interval()).isEqualTo(SUMMARY_ROUTE_DTO.interval());
         assertThat(responseRouteDto.stops().get(0)).isEqualTo(
-            new SummaryRouteStopDto(0, 1, "Stop2"));
-        assertThat(responseRouteDto.stops().get(1)).isEqualTo(new SummaryRouteStopDto(120, 2,
-            "Stop1"));
+            SummaryRouteStopDto.builder().arriveAtFromStart(0).stopOrder(1).stopName("Stop2")
+                .build());
+        assertThat(responseRouteDto.stops().get(1)).isEqualTo(
+            SummaryRouteStopDto.builder().arriveAtFromStart(120).stopOrder(2).stopName("Stop1")
+                .build());
     }
 
     @Test
     void getRoutesByStop_ReturnListTravels() throws Exception {
-        when(routeService.getRoutesByStop("Stop1", TravelSortOption.TIME_IN_ROUTE))
-            .thenReturn(List.of(travel1));
+        when(routeService.getRoutesByStop("Stop1", TravelSortOption.TIME_IN_ROUTE)).thenReturn(
+            List.of(travel1));
 
         MvcResult result = mockMvc.perform(
-                get("/api/v1/route")
-                    .param("stopName", "Stop1")
-                    .param("sort", "TIME_IN_ROUTE"))
-            .andExpect(status().isOk())
-            .andReturn();
+                get("/api/v1/route").param("stopName", "Stop1").param("sort", "TIME_IN_ROUTE"))
+            .andExpect(status().isOk()).andReturn();
 
-        List<TravelDto> response = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
+        List<TravelDto> response = objectMapper.readValue(result.getResponse().getContentAsString(),
             new TypeReference<>() {
-            }
-        );
+            });
 
         assertThat(response).hasSize(1);
         assertThat(response.get(0).timeInRoute()).isEqualTo(travel1.getTimeInRoute());
@@ -155,22 +157,16 @@ class RouteControllerTest {
 
     @Test
     void getRoutesByStops_ReturnListTravels() throws Exception {
-        when(routeService.getRoutesByStops("Stop1", "Stop2", TravelSortOption.NEAREST_ARRIVAL))
-            .thenReturn(List.of(travel1));
+        when(routeService.getRoutesByStops("Stop1", "Stop2",
+            TravelSortOption.NEAREST_ARRIVAL)).thenReturn(List.of(travel1));
 
         MvcResult result = mockMvc.perform(
-                get("/api/v1/route")
-                    .param("fromStopName", "Stop1")
-                    .param("toStopName", "Stop2")
-                    .param("sort", "NEAREST_ARRIVAL"))
-            .andExpect(status().isOk())
-            .andReturn();
+            get("/api/v1/route").param("fromStopName", "Stop1").param("toStopName", "Stop2")
+                .param("sort", "NEAREST_ARRIVAL")).andExpect(status().isOk()).andReturn();
 
-        List<TravelDto> response = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
+        List<TravelDto> response = objectMapper.readValue(result.getResponse().getContentAsString(),
             new TypeReference<>() {
-            }
-        );
+            });
 
         assertThat(response).hasSize(1);
         assertThat(response.get(0).route().name()).isEqualTo(route1.getName());
@@ -180,62 +176,60 @@ class RouteControllerTest {
 
     @Test
     void getRouteByName_ReturnRoute() throws Exception {
-        when(routeService.getRouteByName("route1")).thenReturn(route1);
+        when(routeService.getRouteByName("route1")).thenReturn(List.of(route1));
 
-        MvcResult result = mockMvc.perform(get("/api/v1/route/route1"))
-            .andExpect(status().isOk())
-            .andReturn();
+        MvcResult result =
+            mockMvc.perform(get("/api/v1/route/route1")).andExpect(status().isOk()).andReturn();
 
-        SummaryRouteDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            SummaryRouteDto.class
-        );
+        List<SummaryRouteDto> response =
+            objectMapper.readValue(result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
 
-        assertThat(response.name()).isEqualTo(route1.getName());
-        assertThat(response.type()).isEqualTo(route1.getType());
-        assertThat(response.interval()).isEqualTo(route1.getInterval());
-        assertThat(response.businessHours().startAt()).isEqualTo(
+        assertThat(response.get(0).name()).isEqualTo(route1.getName());
+        assertThat(response.get(0).type()).isEqualTo(route1.getType());
+        assertThat(response.get(0).interval()).isEqualTo(route1.getInterval());
+        assertThat(response.get(0).businessHours().startAt()).isEqualTo(
             route1.getBusinessHours().getStartAt());
-        assertThat(response.stops()).hasSize(2);
-        assertThat(response.stops().get(0).stopName()).isEqualTo("Stop1");
+        assertThat(response.get(0).stops()).hasSize(2);
+        assertThat(response.get(0).stops().get(0).stopName()).isEqualTo("Stop1");
     }
 
     @Test
     void updateRouteByName_ReturnUpdatedRoute() throws Exception {
-        Route updatedRoute = Route.valueOf("route1", "trolleybus", route1.getStops(),
-            route1.getInterval(), route1.getBusinessHours());
+        Route updatedRoute =
+            Route.valueOf(UUID.randomUUID(), "route1", "trolleybus", route1.getStops(),
+                route1.getInterval(), route1.getBusinessHours());
 
-        when(routeService.updateRouteByName(eq("route1"), any(FullUpdateRouteCommand.class)))
-            .thenReturn(updatedRoute);
+        when(routeService.updateRoute(eq(updatedRoute.getId()),
+            any(FullUpdateRouteCommand.class))).thenReturn(updatedRoute);
 
-        FullUpdateRouteDto updateDto = new FullUpdateRouteDto(
-            "route1", "trolleybus", Duration.ofMinutes(10), BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
+        FullUpdateRouteDto updateDto =
+            new FullUpdateRouteDto("route1", "trolleybus",
+                Duration.ofMinutes(10),
+                BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
 
-        MvcResult result = mockMvc.perform(put("/api/v1/route/route1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDto)))
-            .andExpect(status().isOk())
-            .andReturn();
+        MvcResult result = mockMvc.perform(
+                put(String.format("/api/v1/route/%s", updatedRoute.getId())).contentType(
+                        MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updateDto)))
+            .andExpect(status().isCreated()).andReturn();
 
-        SummaryRouteDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(),
-            SummaryRouteDto.class
-        );
+        SummaryRouteDto response = objectMapper.readValue(result.getResponse().getContentAsString(),
+            SummaryRouteDto.class);
 
         assertThat(response.name()).isEqualTo(updateDto.name());
         assertThat(response.type()).isEqualTo(updateDto.type());
         assertThat(response.interval()).isEqualTo(updateDto.interval());
         assertThat(response.stops()).hasSize(
-            (int) StreamSupport.stream(updateDto.stops().spliterator()
-                , false).count());
+            (int) StreamSupport.stream(updateDto.stops().spliterator(), false).count());
     }
 
     @Test
     void deleteRoute_ReturnNoContent() throws Exception {
         doNothing().when(routeService).deleteRoute("route1");
 
-        mockMvc.perform(delete("/api/v1/route/route1"))
-            .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/route/route1")).andExpect(status().isNoContent());
 
         verify(routeService, times(1)).deleteRoute("route1");
     }

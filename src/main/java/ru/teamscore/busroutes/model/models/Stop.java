@@ -5,14 +5,17 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.UUID;
+
 @Getter
 @EqualsAndHashCode
 public class Stop {
+    private final UUID id;
     private final String name;
     private final GeographicCoordinates coordinates;
 
     @Builder
-    private Stop(String name, GeographicCoordinates coordinates) {
+    private Stop(UUID id, String name, GeographicCoordinates coordinates) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Stop name cannot be null or blank");
         }
@@ -20,13 +23,14 @@ public class Stop {
             throw new IllegalArgumentException("Coordinates cannot be null");
         }
 
+        this.id = id;
         this.name = name;
         this.coordinates = new GeographicCoordinates(coordinates.latitude, coordinates.longitude);
     }
 
     @JsonCreator
-    public static Stop valueOf(String name, GeographicCoordinates coordinates) {
-        return new Stop(name, coordinates);
+    public static Stop valueOf(UUID id, String name, GeographicCoordinates coordinates) {
+        return new Stop(id, name, coordinates);
     }
 
     @Getter

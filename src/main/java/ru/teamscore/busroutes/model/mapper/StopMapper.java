@@ -29,7 +29,7 @@ public interface StopMapper {
 
     @ObjectFactory
     default Stop createStop(StopEntity entity) {
-        return Stop.valueOf(entity.getName(), null);
+        return Stop.valueOf(entity.getId(), entity.getName(), null);
     }
 
 }

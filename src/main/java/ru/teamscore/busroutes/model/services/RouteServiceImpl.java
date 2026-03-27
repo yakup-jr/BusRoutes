@@ -20,9 +20,7 @@ import ru.teamscore.busroutes.model.models.Route;
 import ru.teamscore.busroutes.model.models.Travel;
 
 import java.time.Clock;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -37,8 +35,11 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public Route addRoute(CreateRouteCommand command) {
-        if (routeRepository.existsByName(command.name())) {
-            throw new IllegalArgumentException("Route already exists");
+
+        if (StreamSupport.stream(command.stops().spliterator(), false)
+            .collect(Collectors.toUnmodifiableSet()).size() !=
+            StreamSupport.stream(command.stops().spliterator(), false).count()) {
+            throw new AlreadyExistsException("Stops can't be repeated");
         }
 
         RouteEntity routeEntity = mapper.toEntity(command);
@@ -81,6 +82,9 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional(readOnly = true)
     public List<Travel> getRoutesByStop(String stopName, TravelSortOption sort) {
+        if (!stopRepository.existsByName(stopName)) {
+            throw new NotFoundException(stopName, ItemType.STOP);
+        }
         List<Route> routes = mapper.toModels(routeRepository.findRoutesByStop(stopName));
 
         List<Travel> travels =
@@ -94,10 +98,23 @@ public class RouteServiceImpl implements RouteService {
     @Transactional(readOnly = true)
     public List<Travel> getRoutesByStops(String fromStopName, String toStopName,
                                          TravelSortOption sort) {
+        if (!stopRepository.existsByName(fromStopName)) {
+            throw new NotFoundException(fromStopName, ItemType.STOP);
+        }
+        if (!stopRepository.existsByName(toStopName)) {
+            throw new NotFoundException(toStopName, ItemType.STOP);
+        }
+
         List<Route> routes =
             mapper.toModels(routeRepository.findRoutesByBothStops(fromStopName, toStopName));
         List<Travel> travels = routes.stream()
-            .map(route -> route.createTravelBetweenStops(fromStopName, toStopName, clock)).toList();
+            .map(route -> route.createTravelBetweenStops(fromStopName, toStopName, clock))
+            .filter(Optional::isPresent).map(Optional::get).toList();
+
+        if (travels.isEmpty()) {
+            throw new NotFoundException(String.format("from %s to %s", fromStopName, toStopName),
+                ItemType.TRAVEL);
+        }
 
         return sortTravels(travels, sort);
     }
@@ -110,18 +127,23 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Route getRouteByName(String name) {
-        RouteEntity routeEntity = routeRepository.findByNameWithStops(name)
-            .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
+    public Iterable<Route> getRouteByName(String name) {
+        Iterable<RouteEntity> routeEntity = routeRepository.findByNameWithStops(name);
 
-        return mapper.toModel(routeEntity);
+        if (!routeEntity.iterator().hasNext()) {
+            throw new NotFoundException(name, ItemType.ROUTE);
+        }
+
+        return mapper.toModels(routeEntity);
     }
 
     @Override
     @Transactional
-    public Route copyRoute(String routeName, boolean isReverseOrder) {
-        RouteEntity routeEntity = routeRepository.findByNameWithStops(routeName)
-            .orElseThrow(() -> new NotFoundException(routeName, ItemType.ROUTE));
+    public Route copyRoute(UUID routeId, boolean isReverseOrder) {
+        RouteEntity routeEntity =
+            routeRepository.findById(routeId)
+                .orElseThrow(() -> new NotFoundException(routeId.toString(),
+                    ItemType.ROUTE));
 
         Route routeModel = mapper.toModel(routeEntity);
         Route copiedModel = routeModel.copy();
@@ -141,14 +163,14 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     @Transactional
-    public Route updateRouteByName(String name, FullUpdateRouteCommand command) {
-        if (!name.equals(command.name()) &&
-            routeRepository.existsByName(command.name())) {
-            throw new AlreadyExistsException("Route name already exists");
-        }
+    public Route updateRoute(UUID routeId, FullUpdateRouteCommand command) {
+        RouteEntity routeEntity = routeRepository.findById(routeId)
+            .orElseThrow(() -> new NotFoundException(routeId.toString(), ItemType.ROUTE));
 
-        RouteEntity routeEntity = routeRepository.findByName(name)
-            .orElseThrow(() -> new NotFoundException(name, ItemType.ROUTE));
+        if (!routeEntity.getName().equals(command.name()) && routeRepository.existsByName(command.name())) {
+            throw new AlreadyExistsException(
+                String.format("Route with name %s already exists", command.name()));
+        }
 
         routeEntity.setName(command.name());
         routeEntity.setType(command.type());

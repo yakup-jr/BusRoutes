@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.spring.webmvc)
     implementation(libs.mapstruct)
     implementation(libs.spring.validation)
+    implementation(libs.springdoc.openapi.webmvc.ui)
 
     compileOnly(libs.lombok)
 

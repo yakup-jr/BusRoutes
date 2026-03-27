@@ -14,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,12 +30,16 @@ class RouteControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private static final CreateBusinessHoursDto CREATE_BUSINESS_HOURS_DTO =
+        CreateBusinessHoursDto.builder().startAt(LocalTime.of(6, 0)).endAt(LocalTime.of(23, 0))
+            .build();
     private static final BusinessHoursDto BUSINESS_HOURS_DTO =
-        new BusinessHoursDto(LocalTime.of(5, 30), LocalTime.of(23, 0));
+        new BusinessHoursDto(UUID.randomUUID(), LocalTime.of(6, 0), LocalTime.of(23, 0));
     private static final List<SummaryRouteStopDto> ROUTE_STOP_DTOS =
-        List.of(new SummaryRouteStopDto(0, 1, "Stop1"), new SummaryRouteStopDto(120, 2, "Stop2"));
+        List.of(new SummaryRouteStopDto(UUID.randomUUID(), 0, 1, "Stop1"),
+            new SummaryRouteStopDto(UUID.randomUUID(), 600, 2, "Stop2"));
     private static final CreateRouteDto CREATE_ROUTE_DTO =
-        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), BUSINESS_HOURS_DTO,
+        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), CREATE_BUSINESS_HOURS_DTO,
             ROUTE_STOP_DTOS);
 
     @Test
@@ -49,16 +54,24 @@ class RouteControllerIntegrationTest {
                 SummaryRouteDto.class);
         assertThat(routeDto.name()).isEqualTo(CREATE_ROUTE_DTO.name());
         assertThat(routeDto.type()).isEqualTo(CREATE_ROUTE_DTO.type());
-        assertThat(routeDto.businessHours()).isEqualTo(CREATE_ROUTE_DTO.businessHours());
+        assertThat(routeDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(BUSINESS_HOURS_DTO);
         assertThat(routeDto.interval()).isEqualTo(CREATE_ROUTE_DTO.interval());
-        assertThat(routeDto.stops()).isEqualTo(ROUTE_STOP_DTOS);
+        assertThat(routeDto.stops()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(ROUTE_STOP_DTOS);
     }
 
     @Test
     void copyRoute_ReturnCreated() throws Exception {
+        List<SummaryRouteStopDto> routeStopReverse = List.of(
+            new SummaryRouteStopDto(UUID.randomUUID(), ROUTE_STOP_DTOS.get(0).arriveAtFromStart(),
+                ROUTE_STOP_DTOS.get(0).stopOrder(), ROUTE_STOP_DTOS.get(1).stopName()),
+            new SummaryRouteStopDto(UUID.randomUUID(), ROUTE_STOP_DTOS.get(1).arriveAtFromStart(),
+                ROUTE_STOP_DTOS.get(1).stopOrder(), ROUTE_STOP_DTOS.get(0).stopName()));
+
         MvcResult mvcResult = mockMvc.perform(
-                post("/api/v1/route/Route1/copy").param("isReverseOrder", "true")
-                    .contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
+                post("/api/v1/route/859de1e9-57ab-4481-818d-20ac979ff02a/copy").param("isReverseOrder",
+                    "true").contentType(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
             .andReturn();
 
         SummaryRouteDto responseRouteDto =
@@ -66,12 +79,12 @@ class RouteControllerIntegrationTest {
                 SummaryRouteDto.class);
         assertThat(responseRouteDto.name()).isEqualTo("Route1_copy");
         assertThat(responseRouteDto.type()).isEqualTo("Bus");
-        assertThat(responseRouteDto.businessHours()).isEqualTo(
-            new BusinessHoursDto(LocalTime.of(6, 0), LocalTime.of(23, 0)));
+        assertThat(responseRouteDto.businessHours().id()).isNotEqualTo(BUSINESS_HOURS_DTO.id());
+        assertThat(responseRouteDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(BUSINESS_HOURS_DTO);
         assertThat(responseRouteDto.interval()).isEqualTo(Duration.ofMinutes(10));
-        assertThat(responseRouteDto.stops()).isEqualTo(
-            List.of(new SummaryRouteStopDto(0, 1, "Stop2"),
-                new SummaryRouteStopDto(600, 2, "Stop1")));
+        assertThat(responseRouteDto.stops()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(routeStopReverse);
     }
 
     @Test
@@ -110,21 +123,26 @@ class RouteControllerIntegrationTest {
     }
 
     @Test
-    void getRouteByName_ReturnRoute() throws Exception {
+    void getRouteByName_ReturnRoutes() throws Exception {
         MvcResult result =
             mockMvc.perform(get("/api/v1/route/Route1")).andExpect(status().isOk()).andReturn();
 
-        SummaryRouteDto response = objectMapper.readValue(result.getResponse().getContentAsString(),
-            SummaryRouteDto.class);
+        List<SummaryRouteDto> response =
+            objectMapper.readValue(result.getResponse().getContentAsString(),
+                new TypeReference<>() {
+                });
 
-        assertThat(response.name()).isEqualTo("Route1");
-        assertThat(response.type()).isEqualTo("Bus");
-        assertThat(response.interval()).isEqualTo(Duration.ofMinutes(10));
-        assertThat(response.businessHours()).isEqualTo(
-            new BusinessHoursDto(LocalTime.of(6, 0), LocalTime.of(23, 0)));
-        assertThat(response.stops()).hasSize(2);
-        assertThat(response.stops().get(0)).isEqualTo(new SummaryRouteStopDto(0, 1, "Stop1"));
-        assertThat(response.stops().get(1)).isEqualTo(new SummaryRouteStopDto(600, 2, "Stop2"));
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).name()).isEqualTo("Route1");
+        assertThat(response.get(0).type()).isEqualTo("Bus");
+        assertThat(response.get(0).interval()).isEqualTo(Duration.ofMinutes(10));
+        assertThat(response.get(0).businessHours()).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(BUSINESS_HOURS_DTO);
+        assertThat(response.get(0).stops()).hasSize(2);
+        assertThat(response.get(0).stops().get(0)).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(ROUTE_STOP_DTOS.get(0));
+        assertThat(response.get(0).stops().get(1)).usingRecursiveComparison().ignoringFields("id")
+            .isEqualTo(ROUTE_STOP_DTOS.get(1));
     }
 
     @Test
@@ -134,9 +152,9 @@ class RouteControllerIntegrationTest {
                 BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
 
         MvcResult result = mockMvc.perform(
-                put("/api/v1/route/Route1").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(updateDto))).andExpect(status().isOk())
-            .andReturn();
+                put("/api/v1/route/859de1e9-57ab-4481-818d-20ac979ff02a").contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updateDto)))
+            .andExpect(status().isCreated()).andReturn();
 
         SummaryRouteDto response = objectMapper.readValue(result.getResponse().getContentAsString(),
             SummaryRouteDto.class);
