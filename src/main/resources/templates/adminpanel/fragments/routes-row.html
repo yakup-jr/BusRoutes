@@ -1,12 +1,6 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Table row fragment</title>
-</head>
+<html lang="en">
+<head th:replace="/adminpanel/fragments/head-fragment :: headFragment('Route ' + ${route.name} + ' row')"></head>
 <body>
 <div th:fragment="table-row(route)">
     <tr class="hover:bg-[#00bcff]/5 transition-colors duration-150">
@@ -64,7 +58,7 @@
             <div class="flex items-center justify-center gap-3">
 
                 <a href="../routes/edit.html"
-                   th:href="@{http://localhost:8080/adminpanel/routes/edit/{routeId}(routeId=${route.id})}">
+                   th:href="@{/adminpanel/routes/edit/{routeId}(routeId=${route.id})}">
                     <button class="text-slate-400 hover:text-[#00bcff] transition-colors"
                             title="Edit Route">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"

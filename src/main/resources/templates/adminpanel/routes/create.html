@@ -1,10 +1,6 @@
 <!doctype html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Create New Route</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="/adminpanel/fragments/head-fragment :: headFragment('Create route')"></head>
 <body class="bg-slate-50 font-sans">
 <section class="min-h-screen p-4 md:p-8 flex items-center justify-center">
     <div class="w-full max-w-5xl overflow-hidden rounded-xl border border-[#00bcff]/20 bg-white shadow-2xl">
@@ -20,29 +16,12 @@
             </h3>
         </div>
 
-        <form th:action="@{/adminpanel/routes/create}"
+        <form action="/adminpanel/routes/create"
               th:method="post"
               th:object="${createRouteDto}"
               class="flex flex-col">
 
-            <div th:if="${#fields.hasAnyErrors()}"
-                 class="mx-6 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div class="shrink-0 text-red-500">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="text-sm font-bold text-red-800">Validation Error</h5>
-                    <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-1">
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Error
-                            message here
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="/adminpanel/fragments/validation-problem :: error-message(fields, err)"></div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 divide-x divide-slate-100">
 
@@ -86,18 +65,22 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="startAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
+                            <label for="startAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
                                 at</label>
-                            <input id="startAt" th:field="*{businessHours.startAt}" type="time"
+                            <input id="startAt" th:field="*{businessHours.startAt}"
+                                   type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                             <p th:if="${#fields.hasErrors('businessHours.startAt')}"
                                th:errors="*{businessHours.startAt}"
                                class="text-red-500 text-[10px] mt-1 italic"></p>
                         </div>
                         <div>
-                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
+                            <label for="endAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
                                 at</label>
-                            <input id="endAt" th:field="*{businessHours.endAt}" type="time"
+                            <input id="endAt" th:field="*{businessHours.endAt}"
+                                   type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                             <p th:if="${#fields.hasErrors('businessHours.endAt')}"
                                th:errors="*{businessHours.endAt}"
@@ -171,7 +154,7 @@
             </div>
 
             <div class="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-end gap-3">
-                <a th:href="@{/adminpanel/routes}"
+                <a href="/adminpanel/routes"
                    class="px-4 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</a>
                 <button type="submit"
                         class="rounded-lg bg-[#ff6800] px-8 py-2.5 text-sm font-black text-white shadow-lg shadow-[#ff6800]/20 hover:bg-[#e65d00] transition-all active:scale-95">
@@ -181,21 +164,6 @@
         </form>
     </div>
 </section>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 10px;
-    }
-</style>
 <script src="/static/_js/route-edit.js" defer></script>
 </body>
 </html>

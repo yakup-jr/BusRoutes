@@ -7,7 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.teamscore.busroutes.model.commands.CreateRouteCommand;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
@@ -31,6 +30,9 @@ public class AdminRoutesController {
 
     private final RouteService routeService;
     private final RouteDtoMapper mapper;
+
+    private static final String EDIT_ROUTE_PATH = "adminpanel/routes/edit";
+    private static final String REDIRECT_ROUTES = "redirect:/adminpanel/routes";
 
     @GetMapping
     public String getRoutes(Model model,
@@ -56,7 +58,7 @@ public class AdminRoutesController {
         model.addAttribute("route", route);
         model.addAttribute("routeId", routeId);
 
-        return "adminpanel/routes/edit";
+        return EDIT_ROUTE_PATH;
     }
 
     @PutMapping("/edit/{routeId}")
@@ -64,24 +66,22 @@ public class AdminRoutesController {
                               @Valid @ModelAttribute("updateRouteDto")
                               FullUpdateRouteDto fullUpdateRouteDto,
                               BindingResult bindingResult,
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+                              Model model) {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("route", routeService.getRouteById(routeId));
-            return "adminpanel/routes/edit";
+            return EDIT_ROUTE_PATH;
         }
 
         try {
             var command = mapper.toCommand(fullUpdateRouteDto);
             routeService.updateRoute(routeId, command);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Route updated successfully!");
-            return "redirect:/adminpanel/routes";
+            return REDIRECT_ROUTES;
         } catch (Exception e) {
             bindingResult.reject("globalError", e.getMessage());
             model.addAttribute("route", routeService.getRouteById(routeId));
-            return "adminpanel/routes/edit";
+            return EDIT_ROUTE_PATH;
         }
     }
 
@@ -113,7 +113,7 @@ public class AdminRoutesController {
         try {
             CreateRouteCommand command = mapper.toCommand(dto);
             routeService.addRoute(command);
-            return "redirect:/adminpanel/routes";
+            return REDIRECT_ROUTES;
 
         } catch (AlreadyExistsException | IllegalArgumentException | NotFoundException e) {
             bindingResult.reject("globalError", e.getMessage());
@@ -124,20 +124,16 @@ public class AdminRoutesController {
 
     @PostMapping("/copy/{routeId}")
     public String copyRoute(@PathVariable UUID routeId,
-                            @RequestParam(defaultValue = "false") boolean isReverseOrder,
-                            RedirectAttributes redirectAttributes) {
+                            @RequestParam(defaultValue = "false") boolean isReverseOrder) {
         routeService.copyRoute(routeId, isReverseOrder);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Route copied successfully!");
-        return "redirect:/adminpanel/routes";
+        return REDIRECT_ROUTES;
     }
 
     @DeleteMapping("/{routeId}")
-    public String deleteRoute(@PathVariable UUID routeId,
-                              RedirectAttributes redirectAttributes) {
+    public String deleteRoute(@PathVariable UUID routeId) {
         routeService.deleteRouteById(routeId);
 
-        redirectAttributes.addFlashAttribute("successMessage", "Route deleted successfully!");
-        return "redirect:/adminpanel/routes";
+        return REDIRECT_ROUTES;
     }
 }

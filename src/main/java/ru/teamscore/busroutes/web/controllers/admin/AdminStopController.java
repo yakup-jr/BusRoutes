@@ -7,7 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.teamscore.busroutes.model.commands.CreateStopCommand;
 import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
 import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
@@ -30,6 +29,9 @@ public class AdminStopController {
     private final StopService stopService;
     private final RouteService routeService;
     private final StopDtoMapper mapper;
+
+    private static final String EDIT_STOP_PATH = "adminpanel/stops/edit";
+    private static final String REDIRECT_STOPS = "redirect:/adminpanel/stops";
 
     @GetMapping
     public String getAllStops(Model model,
@@ -62,7 +64,7 @@ public class AdminStopController {
         model.addAttribute("stopDto", stopDto);
         model.addAttribute("stopName", stop.getName());
 
-        return "adminpanel/stops/edit";
+        return EDIT_STOP_PATH;
     }
 
     @PutMapping("/edit/{stopName}")
@@ -73,17 +75,17 @@ public class AdminStopController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("stopName", stopName);
-            return "adminpanel/stops/edit";
+            return EDIT_STOP_PATH;
         }
 
         try {
             FullUpdateStopCommand command = mapper.toCommand(stopDto);
             stopService.updateStopByName(stopName, command);
-            return "redirect:/adminpanel/stops";
+            return REDIRECT_STOPS;
         } catch (AlreadyExistsException | IllegalArgumentException | NotFoundException e) {
             model.addAttribute("stopName", stopName);
             bindingResult.reject("globalError", e.getMessage());
-            return "adminpanel/stops/edit";
+            return EDIT_STOP_PATH;
         }
     }
 
@@ -109,7 +111,7 @@ public class AdminStopController {
             CreateStopCommand command = mapper.toCommand(createStopDto);
             stopService.addStop(command);
 
-            return "redirect:/adminpanel/stops";
+            return REDIRECT_STOPS;
         } catch (AlreadyExistsException | IllegalArgumentException | NotFoundException e) {
             bindingResult.reject("globalError", e.getMessage());
 
@@ -118,9 +120,8 @@ public class AdminStopController {
     }
 
     @GetMapping("/delete/{stopName}")
-    public String deleteStop(@PathVariable String stopName, RedirectAttributes redirectAttributes) {
+    public String deleteStop(@PathVariable String stopName) {
         stopService.deleteStopByName(stopName);
-        redirectAttributes.addFlashAttribute("successMessage", "Successfully deleted");
-        return "redirect:/adminpanel/stops";
+        return REDIRECT_STOPS;
     }
 }

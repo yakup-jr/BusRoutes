@@ -8,14 +8,14 @@ async function searchStops(input) {
     }
 
     try {
-        const response = await fetch(`http://localhost:8080/api/v1/stop/search?part=${encodeURIComponent(query)}&size=5`);
+        const response = await fetch(`/api/v1/stop/search?part=${encodeURIComponent(query)}&size=5`);
         const data = await response.json();
         const stops = data.content;
 
         if (stops && stops.length > 0) {
             resultsDiv.innerHTML = stops.map(stop => `
                 <div class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm text-slate-700 border-b border-slate-50 last:border-none"
-                     onclick="selectStop(this, '${stop.name.replace(/'/g, "\\'")}')">
+                     onclick="selectStop(this, '${stop.name.replaceAll('\'', String.raw`\'`)}')">
                     ${stop.name}
                 </div>
             `).join('');
@@ -87,7 +87,6 @@ function addStopRow() {
         </div>
     `;
 
-    const addButton = container.nextElementSibling;
     container.appendChild(newRow);
 
     updateStopCounter();

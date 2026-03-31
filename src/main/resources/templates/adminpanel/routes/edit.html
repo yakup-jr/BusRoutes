@@ -1,11 +1,6 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Route</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
+<html lang="en">
+<head th:replace="/adminpanel/fragments/head-fragment :: headFragment('Edit Route ' + ${route.name})"></head>
 <body>
 <section th:fragment="edit-route(route)"
          class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans flex items-center justify-center">
@@ -29,24 +24,7 @@
               th:object="${updateRouteDto}"
               class="flex flex-col">
 
-            <div th:if="${#fields.hasAnyErrors()}"
-                 class="mx-6 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div class="shrink-0 text-red-500">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="text-sm font-bold text-red-800">Validation Error</h5>
-                    <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-1">
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">
-                            Error
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="/adminpanel/fragments/validation-problem :: error-message(fields, err)"></div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 divide-x divide-slate-100">
 
@@ -54,24 +32,27 @@
                     <h4 class="text-xs font-black uppercase tracking-widest text-[#00bcff] mb-4">
                         General Settings</h4>
 
-                    <input type="hidden" th:field="*{businessHours.id}" />
+                    <input type="hidden" th:field="*{businessHours.id}"/>
 
                     <div>
-                        <label for="routeName" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
+                        <label for="routeName"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
                             Name</label>
                         <input id="routeName"
-                                th:field="*{name}" type="text"
+                               th:field="*{name}" type="text"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                     </div>
 
                     <div>
-                        <label for="type" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
+                        <label for="type"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
                         <input id="type" th:field="*{type}" type="text"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                     </div>
 
                     <div>
-                        <label for="interval" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
+                        <label for="interval"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
                             (Minutes)</label>
                         <input id="interval" th:field="*{interval}" type="number"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff]"/>
@@ -79,16 +60,19 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
+                            <label for="endAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
                                 At</label>
-                            <input id="startAt" th:field="*{businessHours.startAt}" type="time"
+                            <input id="startAt" th:field="*{businessHours.startAt}"
+                                   type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
                         </div>
                         <div>
-                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
+                            <label for="endAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
                                 At</label>
                             <input id="endAt"
-                                    th:field="*{businessHours.endAt}" type="time"
+                                   th:field="*{businessHours.endAt}" type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
                         </div>
                     </div>
@@ -108,7 +92,8 @@
                         <div class="relative group stop-row bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:border-[#00bcff]/30 transition-all"
                              th:each="stop, counter : ${updateRouteDto.stops}">
 
-                            <input type="hidden" th:field="*{stops[__${counter.index}__].id}"/>
+                            <input type="hidden"
+                                   th:field="*{stops[__${counter.index}__].id}"/>
 
                             <input type="hidden"
                                    th:field="*{stops[__${counter.index}__].stopOrder}"
@@ -164,7 +149,7 @@
             </div>
 
             <div class="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-end gap-3">
-                <a th:href="@{/adminpanel/routes}"
+                <a href="/adminpanel/routes"
                    class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">
                     Discard Changes
                 </a>
@@ -176,25 +161,6 @@
         </form>
     </div>
 </section>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #e2e8f0;
-        border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #cbd5e1;
-    }
-</style>
 <script src="/static/_js/route-edit.js" defer></script>
 </body>
 </html>

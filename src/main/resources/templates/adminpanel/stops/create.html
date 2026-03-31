@@ -1,20 +1,10 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Create stop</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<html lang="en">
+<head th:replace="adminpanel/fragments/head-fragment :: headFragment('Create stop')">
 </head>
 <body>
 <section th:fragment="create-stop"
          class="min-h-screen bg-slate-50 p-8 font-sans flex flex-col items-center justify-center">
-    <div th:if="${errorMessage}"
-         th:text="${errorMessage}"
-         class="p-4 mb-4 w-full max-w-md text-sm text-red-800 rounded-lg bg-red-100" role="alert">
-    </div>
 
     <div class="w-full max-w-md overflow-hidden rounded-xl border border-[#00bcff]/20 bg-white shadow-2xl">
         <div class="bg-[#00bcff] px-6 py-4">
@@ -32,32 +22,16 @@
                 naming.</p>
         </div>
 
-        <form th:action="@{|create|}"
+        <form th:action="@{create}"
               th:method="post"
               th:object="${createStopDto}"
               class="p-6 space-y-5">
 
-            <div th:if="${#fields.hasAnyErrors()}"
-                 class="mx-6 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div class="shrink-0 text-red-500">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="text-sm font-bold text-red-800">Validation Error</h5>
-                    <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-1">
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Error
-                            message here
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="/adminpanel/fragments/validation-problem :: error-message(fields, err)"></div>
 
             <div>
-                <label for="stopName" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                <label for="stopName"
+                       class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Stop Name
                 </label>
                 <input
@@ -71,7 +45,8 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="latitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="latitude"
+                           class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Latitude
                     </label>
                     <div class="relative">
@@ -83,13 +58,15 @@
                                 class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-mono text-slate-600 outline-none transition-all focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"
                         />
                         <span class="absolute right-3 top-2.5 text-slate-300">°N</span>
-                        <p th:if="${#fields.hasErrors('coordinates.latitude')}" th:errors="*{coordinates.latitude}"
+                        <p th:if="${#fields.hasErrors('coordinates.latitude')}"
+                           th:errors="*{coordinates.latitude}"
                            class="text-red-500 text-[10px] mt-1 italic"></p>
                     </div>
                 </div>
 
                 <div>
-                    <label for="longitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="longitude"
+                           class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Longitude
                     </label>
                     <div class="relative">
@@ -101,14 +78,15 @@
                                 class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-mono text-slate-600 outline-none transition-all focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"
                         />
                         <span class="absolute right-3 top-2.5 text-slate-300">°W</span>
-                        <p th:if="${#fields.hasErrors('coordinates.longitude')}" th:errors="*{coordinates.longitude}"
+                        <p th:if="${#fields.hasErrors('coordinates.longitude')}"
+                           th:errors="*{coordinates.longitude}"
                            class="text-red-500 text-[10px] mt-1 italic"></p>
                     </div>
                 </div>
             </div>
 
             <div class="mt-8 flex items-center justify-end gap-3 pt-2">
-                <a th:href="@{http://localhost:8080/adminpanel/stops}">
+                <a href="/adminpanel/stops">
                     <button type="button"
                             class="px-4 py-2 text-sm font-semibold text-[#b34925] hover:bg-[#b34925]/5 rounded-lg transition-colors">
                         Cancel

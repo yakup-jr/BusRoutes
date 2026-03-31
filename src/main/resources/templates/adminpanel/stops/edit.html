@@ -1,12 +1,6 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Edit stop</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<html lang="en">
+<head th:replace="adminpanel/fragments/head-fragment :: headFragment('Edit stop')">
 </head>
 <body>
 <section th:fragment="edit-stop(stop)"
@@ -33,27 +27,11 @@
               th:method="put"
               th:object="${stopDto}">
 
-            <div th:if="${#fields.hasAnyErrors()}"
-                 class="mx-6 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div class="shrink-0 text-red-500">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h5 class="text-sm font-bold text-red-800">Validation Error</h5>
-                    <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-1">
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Error
-                            message here
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="/adminpanel/fragments/validation-problem :: error-message(fields, err)"></div>
 
             <div>
-                <label for="stopName" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                <label for="stopName"
+                       class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Stop Name
                 </label>
                 <input
@@ -67,7 +45,8 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="latitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="latitude"
+                           class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Latitude
                     </label>
                     <div class="relative">
@@ -83,7 +62,8 @@
                 </div>
 
                 <div>
-                    <label for="longitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="longitude"
+                           class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Longitude
                     </label>
                     <div class="relative">
@@ -100,7 +80,7 @@
             </div>
 
             <div class="mt-8 flex items-center justify-end gap-3 pt-2">
-                <a th:href="@{http://localhost:8080/adminpanel/stops}">
+                <a href="/adminpanel/stops">
                     <button type="button"
                             class="px-4 py-2 text-sm font-semibold text-[#b34925] hover:bg-[#b34925]/5 rounded-lg transition-colors">
                         Discard

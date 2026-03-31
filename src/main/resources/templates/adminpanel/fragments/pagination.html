@@ -1,0 +1,39 @@
+<div th:fragment="pagination(totalElements, currentPage, size, totalPages, hasPrevious, hasNext, path)"
+     class="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+    <div class="text-sm text-slate-500" th:if="${totalElements > 0}">
+        Showing stop <span class="font-semibold text-slate-700"
+                           th:text="${currentPage * size + 1}">1</span>
+        to <span class="font-semibold text-slate-700"
+                 th:text="${(currentPage + 1) * size > totalElements ? totalElements : (currentPage + 1) * size}">30</span>
+        of <span class="font-semibold text-slate-700"
+                 th:text="${totalElements}">100</span>
+    </div>
+    <div class="text-sm text-slate-500" th:if="${totalElements == 0}">
+        No stops found.
+    </div>
+
+    <div class="flex items-center gap-2">
+        <a th:href="@{${path}(page=${currentPage - 1}, size=${size})}"
+           th:classappend="${!hasPrevious} ? 'pointer-events-none opacity-30' : ''"
+           class="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50 hover:text-[#00bcff]">
+            Prev
+        </a>
+
+        <div class="flex items-center gap-1" th:if="${totalPages > 0}">
+            <th:block
+                    th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                <a th:href="@{${path}(page=${i}, size=${size})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == currentPage} ? 'bg-[#00bcff] text-white border-[#00bcff]' : 'bg-white text-slate-600 border-slate-200'"
+                   class="flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-semibold transition-all">
+                </a>
+            </th:block>
+        </div>
+
+        <a th:href="@{${path}(page=${currentPage + 1}, size=${size})}"
+           th:classappend="${!hasNext} ? 'pointer-events-none opacity-30' : ''"
+           class="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 transition-all hover:bg-slate-50 hover:text-[#00bcff]">
+            Next
+        </a>
+    </div>
+</div>

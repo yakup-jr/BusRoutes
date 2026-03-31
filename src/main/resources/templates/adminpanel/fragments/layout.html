@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head th:fragment="headFragment">
+    <title>Layout header</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -11,16 +12,14 @@
         th:fragment="header">
     <div class="container mx-auto h-full">
         <nav class="flex gap-6 items-center h-full">
-            <a th:href="@{|routes|}">
+            <a href="/adminpanel/routes">
                 <img src="/static/img/bus-logo.png" alt="Bus logo" class="w-8">
             </a>
             <h3 class="sans-serif">
-                <a href="../routes/index.html"
-                   th:href="@{http://localhost:8080/adminpanel/routes}">Routes</a>
+                <a href="/adminpanel/routes">Routes</a>
             </h3>
             <h3 class="sans-serif">
-                <a href="../stops/index.html"
-                   th:href="@{http://localhost:8080/adminpanel/stops}">Stops</a>
+                <a href="/adminpanel/stops">Stops</a>
             </h3>
         </nav>
     </div>
@@ -31,16 +30,16 @@
         th:fragment="footer">
     <div class="container flex flex-sm-row justify-between">
         <div>
+            Inspired by
             &copy;
-            <a href="https://teamscore.ru" class="link-info">Teamscore</a>.
-            Yakupov Dmitry
+            <a href="https://teamscore.ru" class="link-info">Teamscore</a>
+            <a href="https://github.com/KorobetskayaAA">Anastasiya Korobetskaya</a>
+            <a href="https://github.com/KorobetskayaAA/Java23-ExampleProject-Orders">ExampleProject-Orders</a>
         </div>
         <div>
-            <a
-                    href="https://github.com/KorobetskayaAA/Java23-ExampleProject-Orders"
-                    class="link-info"
-            >Learning course Java 2025-2026</a
-            >
+            <a href="https://github.com/yakup-jr/BusRoutes"
+               class="link-info">
+                Learning course Java 2025-2026</a>
         </div>
     </div>
 </footer>
