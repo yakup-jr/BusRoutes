@@ -14,6 +14,7 @@ import ru.teamscore.busroutes.model.commands.FullUpdateRouteCommand;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.models.*;
 import ru.teamscore.busroutes.model.services.RouteService;
+import ru.teamscore.busroutes.web.controllers.rest.RouteController;
 import ru.teamscore.busroutes.web.dtos.routes.*;
 import ru.teamscore.busroutes.web.mappers.RouteDtoMapper;
 import ru.teamscore.busroutes.web.mappers.RouteDtoMapperImpl;
@@ -54,7 +55,8 @@ class RouteControllerTest {
         CreateBusinessHoursDto.builder().startAt(LocalTime.of(6, 0)).endAt(LocalTime.of(23, 0))
             .build();
     private static final BusinessHoursDto BUSINESS_HOURS_DTO =
-        BusinessHoursDto.builder().id(UUID.randomUUID()).startAt(LocalTime.of(5, 30)).endAt(LocalTime.of(23, 0)).build();
+        BusinessHoursDto.builder().id(UUID.randomUUID()).startAt(LocalTime.of(5, 30))
+            .endAt(LocalTime.of(23, 0)).build();
     private static final List<SummaryRouteStopDto> ROUTE_STOP_DTOS = List.of(
         SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(0).stopOrder(1)
             .stopName("Stop1").build(),
@@ -205,8 +207,7 @@ class RouteControllerTest {
             any(FullUpdateRouteCommand.class))).thenReturn(updatedRoute);
 
         FullUpdateRouteDto updateDto =
-            new FullUpdateRouteDto("route1", "trolleybus",
-                Duration.ofMinutes(10),
+            new FullUpdateRouteDto("route1", "trolleybus", 10L,
                 BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
 
         MvcResult result = mockMvc.perform(

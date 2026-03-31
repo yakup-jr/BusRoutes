@@ -1,6 +1,8 @@
 package ru.teamscore.busroutes.model.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.StopEntity;
@@ -14,6 +16,8 @@ import ru.teamscore.busroutes.model.exceptions.InUseException;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.mapper.StopMapper;
 import ru.teamscore.busroutes.model.models.Stop;
+
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -43,6 +47,30 @@ public class StopServiceImpl implements StopService {
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
 
         return mapper.toModel(foundStopEntity);
+    }
+
+    @Override
+    public Stop getStopById(UUID id) {
+        StopEntity stopEntity = stopRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException(id.toString(), ItemType.STOP));
+
+        return mapper.toModel(stopEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Stop> getStops(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<StopEntity> stopsPage = stopRepository.findAll(pageRequest);
+        return stopsPage.map(mapper::toModel);
+    }
+
+    @Override
+    public Page<Stop> getStopsByNameStartingWithIgnoreCase(String name, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<StopEntity> stopsPage =
+            stopRepository.findByNameStartingWithIgnoreCase(name, pageRequest);
+        return stopsPage.map(mapper::toModel);
     }
 
     @Override

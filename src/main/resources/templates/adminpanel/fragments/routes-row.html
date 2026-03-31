@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Table row fragment</title>
+</head>
+<body>
+<div th:fragment="table-row(route)">
+    <tr class="hover:bg-[#00bcff]/5 transition-colors duration-150">
+        <td class="whitespace-nowrap px-4 py-4 text-xs font-mono text-slate-400">
+                <span th:text="${route.id}"
+                      title="550e8400-e29b-41d4-a716-446655440000"
+                      class="cursor-help block max-w-[80px] truncate">
+
+                </span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4">
+                <span th:text="${route.name}"
+                      class="inline-flex items-center justify-center rounded-full bg-[#00bcff]/10 px-3 py-1 text-sm font-bold text-[#00bcff] border border-[#00bcff]/20"></span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4">
+                <span class="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                  <span class="h-1.5 w-1.5 rounded-full bg-[#ff6800]"></span>
+                    <span th:text="${route.type}"></span>
+                </span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4 text-slate-700 font-medium">
+            <span th:text="${route.interval.toMinutesPart()} + ' minutes'"></span>
+            <span class="text-[10px] text-slate-400 font-mono block">
+                (PT1H15M)</span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4 text-slate-700">
+            <div class="flex flex-col">
+                <span class="font-semibold text-slate-800"
+                      th:text="${route.businessHours.startAt.toString()}"></span>
+                <span class="text-xs text-slate-500"
+                      th:text="'to ' + ${route.businessHours.endAt}"></span>
+            </div>
+        </td>
+
+        <td class="px-4 py-4">
+            <ul class="space-y-2 text-xs text-slate-600">
+                <li th:each="stop, counter : ${route.stops}"
+                    class="flex items-center justify-between border-b border-slate-100 pb-1">
+                    <span class="font-medium text-slate-800">
+                        <span th:text="${counter.count}+'.'"
+                              class="text-[#ff6800] font-bold mr-1">1.</span>
+                        <span th:text="${stop.stop.name}">Stop...</span>
+                    </span>
+                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-slate-500"
+                          th:text="${#numbers.formatInteger(stop.arriveAtFromStart / 60, 1)} + 'm'">15m</span>
+                </li>
+            </ul>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4 text-center">
+            <div class="flex items-center justify-center gap-3">
+
+                <a href="../routes/edit.html"
+                   th:href="@{http://localhost:8080/adminpanel/routes/edit/{routeId}(routeId=${route.id})}">
+                    <button class="text-slate-400 hover:text-[#00bcff] transition-colors"
+                            title="Edit Route">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                        </svg>
+                    </button>
+                </a>
+
+                <div class="flex items-center rounded-md border border-slate-200 bg-slate-50 p-1">
+                    <button class="flex items-center gap-1 rounded text-slate-400 hover:text-[#00bcff] hover:bg-white px-2 py-1 transition-all"
+                            title="Copy Route">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"/>
+                        </svg>
+                    </button>
+                    <div class="h-4 w-px bg-slate-300 mx-1"></div>
+                    <label class="flex cursor-pointer items-center gap-1 px-1"
+                           title="Reverse route on copy?">
+                        <input type="checkbox"
+                               class="h-3 w-3 rounded border-slate-300 text-[#00bcff] focus:ring-[#00bcff]"/>
+                        <span class="text-[10px] font-semibold text-slate-500 uppercase">Rev</span>
+                    </label>
+                </div>
+
+                <button class="text-slate-400 hover:text-[#b34925] transition-colors"
+                        title="Delete Route">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                    </svg>
+                </button>
+
+            </div>
+        </td>
+    </tr>
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-100" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Orders - Админпанель - Каталог</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="d-flex flex-column h-100">
+<header></header>
+<nav th:replace="~{/adminpanel/fragments/layout :: header}"></nav>
+
+<main>
+    <div class="min-h-screen bg-slate-50 p-8 font-sans">
+        <div class="mx-auto max-w-7xl">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Route Management</h2>
+                    <p class="text-sm text-slate-500 mt-1">Manage active transit routes,
+                        schedules, and stops.</p>
+                </div>
+                <button class="rounded-lg bg-[#ff6800] px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-[#b34925] focus:outline-none focus:ring-2 focus:ring-[#ff6800] focus:ring-offset-2 transition-colors">
+                    + Add New Route
+                </button>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-[#00bcff]/20 bg-white shadow-lg">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-[#00bcff]/10 text-left text-sm">
+
+                        <thead class="bg-[#00bcff] text-white">
+                        <tr>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wide">
+                                ID
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wide">
+                                Route
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wide">
+                                Type
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wide">
+                                Interval
+                            </th>
+                            <th scope="col" class="px-4 py-4 font-semibold tracking-wide">
+                                Business Hours
+                            </th>
+                            <th scope="col"
+                                class="px-4 py-4 font-semibold tracking-wide min-w-[200px]">
+                                Stops (Order, Name, Time)
+                            </th>
+                            <th scope="col"
+                                class="px-4 py-4 font-semibold tracking-wide text-center">
+                                Actions
+                            </th>
+                        </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100 bg-white"
+                               th:each="route : ${routes}"
+                               th:insert="~{adminpanel/fragments/routes-row :: table-row(stop)}"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{/adminpanel/fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package ru.teamscore.busroutes.web.controllers;
+package ru.teamscore.busroutes.web.controllers.rest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

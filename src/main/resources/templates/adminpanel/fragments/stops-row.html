@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Table row fragment</title>
+</head>
+<body>
+<div th:fragment="table-row(stop, page, size)">
+    <tr class="hover:bg-[#00bcff]/5 transition-colors duration-150">
+        <td class="whitespace-nowrap px-4 py-4 text-xs font-mono text-slate-400">
+                <span th:text="${stop.id}"
+                      title="550e8400-e29b-41d4-a716-446655440000"
+                      class="cursor-help block max-w-[80px] truncate">
+
+                </span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4">
+                <span th:text="${stop.name}"
+                      class="inline-flex items-center justify-center rounded-full bg-[#00bcff]/10 px-3 py-1 text-sm font-bold text-[#00bcff] border border-[#00bcff]/20"></span>
+        </td>
+
+        <td th:text="${stop.coordinates.latitude}"
+            class="whitespace-nowrap px-4 py-4 text-slate-700 font-medium">
+            1h 15m <span
+                class="text-[10px] text-slate-400 font-mono block">(PT1H15M)</span>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4 text-slate-700">
+            <div class="flex flex-col">
+                <span th:text="${stop.coordinates.longitude}"
+                      class="font-semibold text-slate-800"></span>
+            </div>
+        </td>
+
+        <td class="whitespace-nowrap px-4 py-4 text-center">
+            <div class="flex items-center justify-center gap-3">
+
+                <a th:href="@{|stops/${stop.id}|}"
+                   th:target="_blank"
+                   href="../stops/edit.html">
+                    <button class="text-slate-400 hover:text-[#00bcff] hover:cursor-pointer transition-colors"
+                            title="Edit Route">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+                        </svg>
+                    </button>
+                </a>
+
+
+                <a th:href="@{|stops/delete/${stop.name}?page=${page}&size=${size}|}">
+                    <button class="text-slate-400 hover:text-[#b34925] hover:cursor-pointer transition-colors"
+                            title="Delete Route">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                        </svg>
+                    </button>
+                </a>
+
+            </div>
+        </td>
+    </tr>
+</div>
+</body>
+</html>

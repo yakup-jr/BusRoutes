@@ -1,6 +1,8 @@
 package ru.teamscore.busroutes.model.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.teamscore.busroutes.data.entities.RouteEntity;
@@ -51,6 +53,13 @@ public class RouteServiceImpl implements RouteService {
         return mapper.toModel(routeRepository.save(routeEntity));
     }
 
+    @Override
+    public Page<Route> getRoutes(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<RouteEntity> pageOfRoutes = routeRepository.findAll(pageRequest);
+        return pageOfRoutes.map(mapper::toModel);
+    }
+
     private List<String> extractStopNames(Iterable<RouteStopCommand> stops) {
         return StreamSupport.stream(stops.spliterator(), false).map(RouteStopCommand::stopName)
             .toList();
@@ -93,6 +102,12 @@ public class RouteServiceImpl implements RouteService {
         return sortTravels(travels, sort);
     }
 
+    @Override
+    public Route getRouteById(UUID id) {
+        RouteEntity routeEntity = routeRepository.findByIdEager(id)
+            .orElseThrow(() -> new NotFoundException(id.toString(), ItemType.ROUTE));
+        return mapper.toModel(routeEntity);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -167,7 +182,8 @@ public class RouteServiceImpl implements RouteService {
         RouteEntity routeEntity = routeRepository.findById(routeId)
             .orElseThrow(() -> new NotFoundException(routeId.toString(), ItemType.ROUTE));
 
-        if (!routeEntity.getName().equals(command.name()) && routeRepository.existsByName(command.name())) {
+        if (!routeEntity.getName().equals(command.name()) &&
+            routeRepository.existsByName(command.name())) {
             throw new AlreadyExistsException(
                 String.format("Route with name %s already exists", command.name()));
         }

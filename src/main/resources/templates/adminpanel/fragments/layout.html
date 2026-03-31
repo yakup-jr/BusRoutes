@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="headFragment">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body>
+<header
+        class="bd-header bg-dark py-3 h-20"
+        th:fragment="header">
+    <div class="container mx-auto h-full">
+        <nav class="flex gap-6 items-center h-full">
+            <h2 class="sans-serif">
+                Bus routes
+            </h2>
+            <h3 class="sans-serif">
+                <a href="../routes/index.html" th:href="@{http://localhost:8080/adminpanel/routes}">Routes</a>
+            </h3>
+            <h3 class="sans-serif">
+                <a href="../stops/index.html" th:href="@{http://localhost:8080/adminpanel/stops}">Stops</a>
+            </h3>
+        </nav>
+    </div>
+</header>
+
+
+<footer class="container footer mx-auto py-3 bg-light"
+        th:fragment="footer">
+    <div class="container flex flex-sm-row justify-between">
+        <div>
+            &copy;
+            <a href="https://teamscore.ru" class="link-info">Teamscore</a>.
+            Yakupov Dmitry
+        </div>
+        <div>
+            <a
+                    href="https://github.com/KorobetskayaAA/Java23-ExampleProject-Orders"
+                    class="link-info"
+            >Learning course Java 2025-2026</a
+            >
+        </div>
+    </div>
+</footer>
+</body>
+</html>
