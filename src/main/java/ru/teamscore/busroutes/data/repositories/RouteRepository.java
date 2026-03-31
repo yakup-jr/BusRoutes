@@ -23,7 +23,6 @@ public interface RouteRepository
 
     Iterable<RouteEntity> findByName(String name);
 
-    //todo: not override findAll. Should be findAllEager
     @EntityGraph(attributePaths = {"stops", "stops.stop", "stops.stop.geographicCoordinates",
         "businessHours"})
     Page<RouteEntity> findAll(Pageable pageable);

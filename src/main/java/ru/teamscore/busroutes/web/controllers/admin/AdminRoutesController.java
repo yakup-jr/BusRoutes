@@ -59,7 +59,7 @@ public class AdminRoutesController {
         return "adminpanel/routes/edit";
     }
 
-    @PostMapping("/edit/{routeId}")
+    @PutMapping("/edit/{routeId}")
     public String updateRoute(@PathVariable UUID routeId,
                               @Valid @ModelAttribute("updateRouteDto")
                               FullUpdateRouteDto fullUpdateRouteDto,

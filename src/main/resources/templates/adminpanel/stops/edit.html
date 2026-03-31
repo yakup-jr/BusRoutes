@@ -53,10 +53,11 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                <label for="stopName" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Stop Name
                 </label>
                 <input
+                        id="stopName"
                         th:field="*{name}"
                         type="text"
                         placeholder="e.g. Central Station"
@@ -66,11 +67,12 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="latitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Latitude
                     </label>
                     <div class="relative">
                         <input
+                                id="latitude"
                                 th:field="*{coordinates.latitude}"
                                 type="text"
                                 placeholder="40.7128"
@@ -81,11 +83,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    <label for="longitude" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                         Longitude
                     </label>
                     <div class="relative">
                         <input
+                                id="longitude"
                                 th:field="*{coordinates.longitude}"
                                 type="text"
                                 placeholder="-74.0060"

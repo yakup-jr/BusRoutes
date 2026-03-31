@@ -51,9 +51,11 @@
                         General Settings</h4>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
+                        <label for="routeName"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
                             Name</label>
-                        <input th:field="*{name}" type="text"
+                        <input id="routeName"
+                               th:field="*{name}" type="text"
                                placeholder="e.g., Route 101"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                         <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}"
@@ -61,18 +63,21 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Transport
+                        <label for="type"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Transport
                             Type</label>
-                        <input th:field="*{type}" type="text"
+                        <input id="type"
+                               th:field="*{type}" type="text"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                         <p th:if="${#fields.hasErrors('type')}" th:errors="*{type}"
                            class="text-red-500 text-[10px] mt-1 italic"></p>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
+                        <label for="interval"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
                             (Min)</label>
-                        <input th:field="*{interval}" type="number"
+                        <input id="interval" th:field="*{interval}" type="number"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                         <p th:if="${#fields.hasErrors('interval')}"
                            th:errors="*{interval}"
@@ -81,18 +86,18 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
+                            <label for="startAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
                                 at</label>
-                            <input th:field="*{businessHours.startAt}" type="time"
+                            <input id="startAt" th:field="*{businessHours.startAt}" type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                             <p th:if="${#fields.hasErrors('businessHours.startAt')}"
                                th:errors="*{businessHours.startAt}"
                                class="text-red-500 text-[10px] mt-1 italic"></p>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
+                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
                                 at</label>
-                            <input th:field="*{businessHours.endAt}" type="time"
+                            <input id="endAt" th:field="*{businessHours.endAt}" type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                             <p th:if="${#fields.hasErrors('businessHours.endAt')}"
                                th:errors="*{businessHours.endAt}"

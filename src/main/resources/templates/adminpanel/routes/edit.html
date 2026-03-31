@@ -25,7 +25,7 @@
         </div>
 
         <form th:action="@{/adminpanel/routes/edit/{id}(id=${routeId})}"
-              th:method="post"
+              th:method="put"
               th:object="${updateRouteDto}"
               class="flex flex-col">
 
@@ -54,37 +54,41 @@
                     <h4 class="text-xs font-black uppercase tracking-widest text-[#00bcff] mb-4">
                         General Settings</h4>
 
+                    <input type="hidden" th:field="*{businessHours.id}" />
+
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
+                        <label for="routeName" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
                             Name</label>
-                        <input th:field="*{name}" type="text"
+                        <input id="routeName"
+                                th:field="*{name}" type="text"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
-                        <input th:field="*{type}" type="text"
+                        <label for="type" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
+                        <input id="type" th:field="*{type}" type="text"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
+                        <label for="interval" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
                             (Minutes)</label>
-                        <input th:field="*{interval}" type="number"
+                        <input id="interval" th:field="*{interval}" type="number"
                                class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff]"/>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
+                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
                                 At</label>
-                            <input th:field="*{businessHours.startAt}" type="time"
+                            <input id="startAt" th:field="*{businessHours.startAt}" type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
+                            <label for="endAt" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
                                 At</label>
-                            <input th:field="*{businessHours.endAt}" type="time"
+                            <input id="endAt"
+                                    th:field="*{businessHours.endAt}" type="time"
                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
                         </div>
                     </div>
@@ -103,6 +107,8 @@
                          class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                         <div class="relative group stop-row bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:border-[#00bcff]/30 transition-all"
                              th:each="stop, counter : ${updateRouteDto.stops}">
+
+                            <input type="hidden" th:field="*{stops[__${counter.index}__].id}"/>
 
                             <input type="hidden"
                                    th:field="*{stops[__${counter.index}__].stopOrder}"

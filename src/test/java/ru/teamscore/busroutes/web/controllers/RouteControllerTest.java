@@ -62,12 +62,17 @@ class RouteControllerTest {
             .stopName("Stop1").build(),
         SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(120).stopOrder(2)
             .stopName("Stop2").build());
+    private static final List<CreateRouteStopDto> CREATE_ROUTE_STOP_DTOS = List.of(
+        CreateRouteStopDto.builder().arriveAtFromStart(0).stopOrder(1)
+            .stopName("Stop1").build(),
+        CreateRouteStopDto.builder().arriveAtFromStart(120).stopOrder(2)
+            .stopName("Stop2").build());
     private static final SummaryRouteDto SUMMARY_ROUTE_DTO =
         SummaryRouteDto.builder().name("route1").type("bus").interval(Duration.ofMinutes(10))
             .businessHours(BUSINESS_HOURS_DTO).stops(ROUTE_STOP_DTOS).build();
     private static final CreateRouteDto CREATE_ROUTE_DTO =
-        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), CREATE_BUSINESS_HOURS_DTO,
-            ROUTE_STOP_DTOS);
+        new CreateRouteDto("route1", "bus", 10L, CREATE_BUSINESS_HOURS_DTO,
+            CREATE_ROUTE_STOP_DTOS);
 
     @BeforeEach
     void setUp() {
@@ -105,7 +110,7 @@ class RouteControllerTest {
         assertThat(routeDto.type()).isEqualTo(CREATE_ROUTE_DTO.type());
         assertThat(routeDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(BUSINESS_HOURS_DTO);
-        assertThat(routeDto.interval()).isEqualTo(CREATE_ROUTE_DTO.interval());
+        assertThat(routeDto.interval()).isEqualTo(Duration.ofMinutes(CREATE_ROUTE_DTO.interval()));
         assertThat(routeDto.stops()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(ROUTE_STOP_DTOS);
     }
@@ -221,7 +226,7 @@ class RouteControllerTest {
 
         assertThat(response.name()).isEqualTo(updateDto.name());
         assertThat(response.type()).isEqualTo(updateDto.type());
-        assertThat(response.interval()).isEqualTo(updateDto.interval());
+        assertThat(response.interval()).isEqualTo(Duration.ofMinutes(updateDto.interval()));
         assertThat(response.stops()).hasSize(
             (int) StreamSupport.stream(updateDto.stops().spliterator(), false).count());
     }
