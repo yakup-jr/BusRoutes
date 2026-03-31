@@ -27,5 +27,7 @@ public interface RouteService {
 
     Route updateRoute(UUID routeId, FullUpdateRouteCommand command);
 
-    void deleteRoute(String routeName);
+    void deleteRouteByName(String routeName);
+
+    void deleteRouteById(UUID id);
 }

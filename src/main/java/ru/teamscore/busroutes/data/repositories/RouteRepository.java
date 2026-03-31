@@ -16,8 +16,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RouteRepository extends JpaRepository<RouteEntity, UUID>,
-    PagingAndSortingRepository<RouteEntity, UUID> {
+public interface RouteRepository
+    extends JpaRepository<RouteEntity, UUID>, PagingAndSortingRepository<RouteEntity, UUID> {
 
     boolean existsByName(String name);
 
@@ -28,8 +28,8 @@ public interface RouteRepository extends JpaRepository<RouteEntity, UUID>,
         "businessHours"})
     Page<RouteEntity> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"stops", "stops.stop", "businessHours", "stops.stop" +
-        ".geographicCoordinates"})
+    @EntityGraph(attributePaths = {"stops", "stops.stop", "businessHours",
+        "stops.stop" + ".geographicCoordinates"})
     @Query("select r from RouteEntity r where r.id = :routeId")
     Optional<RouteEntity> findByIdEager(UUID routeId);
 

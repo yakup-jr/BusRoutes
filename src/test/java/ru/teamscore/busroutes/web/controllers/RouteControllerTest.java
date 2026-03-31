@@ -228,10 +228,10 @@ class RouteControllerTest {
 
     @Test
     void deleteRoute_ReturnNoContent() throws Exception {
-        doNothing().when(routeService).deleteRoute("route1");
+        doNothing().when(routeService).deleteRouteByName("route1");
 
         mockMvc.perform(delete("/api/v1/route/route1")).andExpect(status().isNoContent());
 
-        verify(routeService, times(1)).deleteRoute("route1");
+        verify(routeService, times(1)).deleteRouteByName("route1");
     }
 }

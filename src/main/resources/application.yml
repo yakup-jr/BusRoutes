@@ -3,3 +3,7 @@ spring:
     name: "BusRoutes"
   jpa:
     open-in-view: false
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true

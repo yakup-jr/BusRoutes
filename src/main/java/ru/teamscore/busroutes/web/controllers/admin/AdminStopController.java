@@ -1,13 +1,17 @@
 package ru.teamscore.busroutes.web.controllers.admin;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.teamscore.busroutes.model.commands.CreateStopCommand;
 import ru.teamscore.busroutes.model.commands.FullUpdateStopCommand;
+import ru.teamscore.busroutes.model.exceptions.AlreadyExistsException;
+import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.model.services.RouteService;
 import ru.teamscore.busroutes.model.services.StopService;
@@ -56,18 +60,31 @@ public class AdminStopController {
 
         model.addAttribute("stop", stop);
         model.addAttribute("stopDto", stopDto);
-        return "/adminpanel/stops/edit";
+        model.addAttribute("stopName", stop.getName());
+
+        return "adminpanel/stops/edit";
     }
 
-    @PostMapping("/edit/{stopName}")
+    @PutMapping("/edit/{stopName}")
     public String updateStop(@PathVariable String stopName,
-                             @ModelAttribute("stopDto") FullUpdateStopDto stopDto,
-                             RedirectAttributes ra) {
-        FullUpdateStopCommand command = mapper.toCommand(stopDto);
-        stopService.updateStopByName(stopName, command);
+                             @Valid @ModelAttribute("stopDto") FullUpdateStopDto stopDto,
+                             BindingResult bindingResult,
+                             Model model) {
 
-        ra.addFlashAttribute("successMessage", "Stop updated successfully!");
-        return "redirect:/adminpanel/stops";
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("stopName", stopName);
+            return "adminpanel/stops/edit";
+        }
+
+        try {
+            FullUpdateStopCommand command = mapper.toCommand(stopDto);
+            stopService.updateStopByName(stopName, command);
+            return "redirect:/adminpanel/stops";
+        } catch (AlreadyExistsException | IllegalArgumentException | NotFoundException e) {
+            model.addAttribute("stopName", stopName);
+            bindingResult.reject("globalError", e.getMessage());
+            return "adminpanel/stops/edit";
+        }
     }
 
     @GetMapping("/create")
@@ -80,13 +97,24 @@ public class AdminStopController {
     }
 
     @PostMapping("/create")
-    public String createStop(@ModelAttribute("createStopDto") CreateStopDto createStopDto,
-                             RedirectAttributes redirectAttributes) {
-        CreateStopCommand command = mapper.toCommand(createStopDto);
-        stopService.addStop(command);
+    public String createStop(@Valid @ModelAttribute("createStopDto") CreateStopDto createStopDto,
+                             BindingResult bindingResult,
+                             Model model) {
 
-        redirectAttributes.addFlashAttribute("successMessage", "Stop created successfully!");
-        return "redirect:/adminpanel/stops";
+        if (bindingResult.hasErrors()) {
+            return "adminpanel/stops/create";
+        }
+
+        try {
+            CreateStopCommand command = mapper.toCommand(createStopDto);
+            stopService.addStop(command);
+
+            return "redirect:/adminpanel/stops";
+        } catch (AlreadyExistsException | IllegalArgumentException | NotFoundException e) {
+            bindingResult.reject("globalError", e.getMessage());
+
+            return "adminpanel/stops/create";
+        }
     }
 
     @GetMapping("/delete/{stopName}")

@@ -73,10 +73,8 @@ public class Route {
     }
 
     public Travel createTravelToLastStop(String stopName, Clock clock) {
-        int lastStopSeconds = stops.stream()
-            .mapToInt(RouteStop::getArriveAtFromStart)
-            .max()
-            .orElse(0);
+        int lastStopSeconds =
+            stops.stream().mapToInt(RouteStop::getArriveAtFromStart).max().orElse(0);
         return createTravel(stopName, lastStopSeconds, clock);
     }
 
@@ -99,9 +97,7 @@ public class Route {
     }
 
     private RouteStop findStopByName(String name) {
-        return stops.stream()
-            .filter(rs -> rs.getStop().getName().equals(name))
-            .findFirst()
+        return stops.stream().filter(rs -> rs.getStop().getName().equals(name)).findFirst()
             .orElseThrow(() -> new NotFoundException(name, ItemType.STOP));
     }
 
@@ -135,25 +131,26 @@ public class Route {
     }
 
     public Route reverseRoute() {
+        if (stops == null || stops.isEmpty()) return this;
+        int totalDuration = stops.get(stops.size() - 1).getArriveAtFromStart();
         List<RouteStop> reverseStops = new ArrayList<>();
-        int i = stops.size() - 1;
-        int j = 0;
-        while (i >= 0) {
-            int arriveAtFromStart = stops.get(j).getArriveAtFromStart();
-            int order = stops.get(j).getStopOrder();
-            Stop stop = stops.get(i).getStop();
-            reverseStops.add(RouteStop.valueOf(null, arriveAtFromStart, order, stop));
 
-            i--;
-            j++;
+        for (int i = stops.size() - 1; i >= 0; i--) {
+            RouteStop originalStop = stops.get(i);
+            int newArriveAt = totalDuration - originalStop.getArriveAtFromStart();
+            int newOrder = reverseStops.size() + 1;
+            reverseStops.add(
+                RouteStop.builder().stop(originalStop.getStop()).arriveAtFromStart(newArriveAt)
+                    .stopOrder(newOrder).build());
         }
 
-        return Route.valueOf(id, name, type, reverseStops, interval, businessHours);
+        return Route.builder().id(id).name(name).type(type).stops(reverseStops).interval(interval)
+            .businessHours(businessHours).build();
     }
 
     public Route copy() {
-        return Route.valueOf(id, String.format("%s_copy", name), type, stops, interval,
-            businessHours.copy());
+        return Route.builder().name(String.format("%s_copy", name)).type(type).stops(stops)
+            .interval(interval).businessHours(businessHours.copy()).build();
     }
 
     public int getStopsCount() {

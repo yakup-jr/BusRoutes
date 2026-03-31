@@ -4,21 +4,20 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.Duration;
+import java.util.List;
 
 public record CreateRouteDto(
-    @NotNull
-    @NotBlank(message = "name must be not blank")
+    @NotNull(message = "Name must be not null")
+    @NotBlank(message = "Name must be not blank")
     String name,
-    @NotNull
-    @NotBlank(message = "type must be not blank")
+    @NotNull(message = "Type must be not null")
+    @NotBlank(message = "Type must be not blank")
     String type,
-    @NotNull
-    Duration interval,
-    @NotNull
+    @NotNull(message = "Interval must be not null")
+    Long interval,
     @Valid
     CreateBusinessHoursDto businessHours,
-    @NotNull
-    Iterable<@Valid SummaryRouteStopDto> stops
+    @NotNull(message = "Stops must be not null")
+    List<@Valid CreateRouteStopDto> stops
 ) {
 }

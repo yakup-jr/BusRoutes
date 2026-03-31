@@ -11,14 +11,16 @@
         th:fragment="header">
     <div class="container mx-auto h-full">
         <nav class="flex gap-6 items-center h-full">
-            <h2 class="sans-serif">
-                Bus routes
-            </h2>
+            <a th:href="@{|routes|}">
+                <img src="/static/img/bus-logo.png" alt="Bus logo" class="w-8">
+            </a>
             <h3 class="sans-serif">
-                <a href="../routes/index.html" th:href="@{http://localhost:8080/adminpanel/routes}">Routes</a>
+                <a href="../routes/index.html"
+                   th:href="@{http://localhost:8080/adminpanel/routes}">Routes</a>
             </h3>
             <h3 class="sans-serif">
-                <a href="../stops/index.html" th:href="@{http://localhost:8080/adminpanel/stops}">Stops</a>
+                <a href="../stops/index.html"
+                   th:href="@{http://localhost:8080/adminpanel/stops}">Stops</a>
             </h3>
         </nav>
     </div>

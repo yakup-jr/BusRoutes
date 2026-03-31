@@ -57,6 +57,14 @@ public class RouteServiceImpl implements RouteService {
     public Page<Route> getRoutes(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         Page<RouteEntity> pageOfRoutes = routeRepository.findAll(pageRequest);
+
+        pageOfRoutes.getContent().forEach(route -> {
+            if (route.getStops() != null) {
+                route.getStops()
+                    .sort(Comparator.comparingInt(RouteStopEntity::getArriveAtFromStart));
+            }
+        });
+
         return pageOfRoutes.map(mapper::toModel);
     }
 
@@ -70,7 +78,14 @@ public class RouteServiceImpl implements RouteService {
             .collect(Collectors.toMap(StopEntity::getName, s -> s));
 
         if (stopMap.size() < stopNames.size()) {
-            throw new NotFoundException("Some stops not found", ItemType.STOP);
+            var sb = new StringBuilder();
+            stopNames.forEach(stopName -> {
+                if (!stopMap.containsKey(stopName)) {
+                    sb.append(stopName).append(", ");
+                }
+            });
+            sb.delete(sb.lastIndexOf(", "), sb.length());
+            throw new NotFoundException(sb.toString(), ItemType.STOP);
         }
 
         return stopMap;
@@ -83,6 +98,7 @@ public class RouteServiceImpl implements RouteService {
             if (managedStop == null) {
                 throw new NotFoundException(routeStop.getStop().getName(), ItemType.STOP);
             }
+            routeStop.setId(null);
             routeStop.setStop(managedStop);
             routeStop.setRoute(routeEntity);
         }
@@ -106,6 +122,12 @@ public class RouteServiceImpl implements RouteService {
     public Route getRouteById(UUID id) {
         RouteEntity routeEntity = routeRepository.findByIdEager(id)
             .orElseThrow(() -> new NotFoundException(id.toString(), ItemType.ROUTE));
+
+        if (routeEntity.getStops() != null) {
+            routeEntity.getStops()
+                .sort(Comparator.comparingInt(RouteStopEntity::getArriveAtFromStart));
+        }
+
         return mapper.toModel(routeEntity);
     }
 
@@ -155,10 +177,8 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public Route copyRoute(UUID routeId, boolean isReverseOrder) {
-        RouteEntity routeEntity =
-            routeRepository.findById(routeId)
-                .orElseThrow(() -> new NotFoundException(routeId.toString(),
-                    ItemType.ROUTE));
+        RouteEntity routeEntity = routeRepository.findById(routeId)
+            .orElseThrow(() -> new NotFoundException(routeId.toString(), ItemType.ROUTE));
 
         Route routeModel = mapper.toModel(routeEntity);
         Route copiedModel = routeModel.copy();
@@ -204,12 +224,21 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     @Transactional
-    public void deleteRoute(String routeName) {
+    public void deleteRouteByName(String routeName) {
         if (!routeRepository.existsByName(routeName)) {
             throw new NotFoundException(routeName, ItemType.ROUTE);
         }
 
         routeRepository.deleteByName(routeName);
+    }
+
+    @Override
+    public void deleteRouteById(UUID id) {
+        if (!routeRepository.existsById(id)) {
+            throw new NotFoundException(id.toString(), ItemType.ROUTE);
+        }
+
+        routeRepository.deleteById(id);
     }
 
     private Map<String, StopEntity> extractStopEntities(RouteEntity routeEntity) {
