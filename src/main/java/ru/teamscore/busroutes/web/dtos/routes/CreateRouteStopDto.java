@@ -6,12 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.UUID;
-
 @Builder
-public record SummaryRouteStopDto(
-    @NotNull(message = "Stop id must be not null")
-    UUID id,
+public record CreateRouteStopDto(
     @Min(value = 0, message = "time time from start must be non negative")
     int arriveAtFromStart,
     @Min(value = 1, message = "order must be positive")
@@ -19,6 +15,5 @@ public record SummaryRouteStopDto(
     @NotNull(message = "Stop name must be not null")
     @NotBlank(message = "Stop name must be not blank")
     @Length(min = 2, max = 255, message = "Length must be in range 2-255 chars (without blank)")
-    String stopName
-) {
+    String stopName) {
 }

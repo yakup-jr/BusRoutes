@@ -4,6 +4,7 @@ springDependencyManagement = "1.1.7"
 mapstruct = "1.6.3"
 tc-postgresql = "1.21.4"
 openapi-webmvc-ui = "3.0.1"
+thymeleaf = "4.0.4"
 
 [plugins]
 springBoot = { id = "org.springframework.boot", version.ref = "springBoot" }
@@ -17,9 +18,11 @@ mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.re
 spring-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+spring-devtools = { module = "org.springframework.boot:spring-boot-devtools" }
 lombok = { module = "org.projectlombok:lombok" }
 postgresql = { module = "org.postgresql:postgresql" }
 springdoc-openapi-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "openapi-webmvc-ui" }
+thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf", version.ref = "thymeleaf" }
 
 spring-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
 spring-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }

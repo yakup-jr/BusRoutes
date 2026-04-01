@@ -3,9 +3,11 @@ package ru.teamscore.busroutes.web.dtos.routes;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
-import java.time.Duration;
+import java.util.List;
 
+@Builder
 public record FullUpdateRouteDto(
     @NotNull
     @NotBlank(message = "name must be not blank")
@@ -14,11 +16,11 @@ public record FullUpdateRouteDto(
     @NotBlank(message = "type must be not blank")
     String type,
     @NotNull
-    Duration interval,
+    Long interval,
     @NotNull
     @Valid
     BusinessHoursDto businessHours,
     @NotNull
-    Iterable<@Valid SummaryRouteStopDto> stops
+    List<@Valid SummaryRouteStopDto> stops
 ) {
 }

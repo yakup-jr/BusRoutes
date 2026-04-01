@@ -1,4 +1,4 @@
-package ru.teamscore.busroutes.web.controllers;
+package ru.teamscore.busroutes.web.controllers.rest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -84,7 +84,7 @@ public class RouteController {
     public ResponseEntity<Void> deleteRoute(
         @PathVariable @NotBlank(message = "Route name cannot be empty")
         String name) {
-        routeService.deleteRoute(name);
+        routeService.deleteRouteByName(name);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

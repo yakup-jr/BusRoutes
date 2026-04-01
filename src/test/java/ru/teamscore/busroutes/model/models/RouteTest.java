@@ -145,7 +145,7 @@ class RouteTest {
         Route reversed = route2.reverseRoute();
 
         assertThat(reversed.getStops()).extracting("arriveAtFromStart", "stopOrder")
-            .containsExactly(tuple(0, 1), tuple(10, 2), tuple(25, 3));
+            .containsExactly(tuple(0, 1), tuple(15, 2), tuple(25, 3));
         assertThat(reversed.getStops()).extracting("stop").extracting("name")
             .containsExactly("Stop3", "Stop2", "Stop1");
     }

@@ -35,12 +35,15 @@ class RouteControllerIntegrationTest {
             .build();
     private static final BusinessHoursDto BUSINESS_HOURS_DTO =
         new BusinessHoursDto(UUID.randomUUID(), LocalTime.of(6, 0), LocalTime.of(23, 0));
+    private static final List<CreateRouteStopDto> CREATE_ROUTE_STOP_DTOS =
+        List.of(new CreateRouteStopDto(0, 1, "Stop1"),
+            new CreateRouteStopDto(600, 2, "Stop2"));
     private static final List<SummaryRouteStopDto> ROUTE_STOP_DTOS =
         List.of(new SummaryRouteStopDto(UUID.randomUUID(), 0, 1, "Stop1"),
             new SummaryRouteStopDto(UUID.randomUUID(), 600, 2, "Stop2"));
     private static final CreateRouteDto CREATE_ROUTE_DTO =
-        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), CREATE_BUSINESS_HOURS_DTO,
-            ROUTE_STOP_DTOS);
+        new CreateRouteDto("route1", "bus", 10L, CREATE_BUSINESS_HOURS_DTO,
+            CREATE_ROUTE_STOP_DTOS);
 
     @Test
     void addRoute_ReturnCreated() throws Exception {
@@ -56,7 +59,7 @@ class RouteControllerIntegrationTest {
         assertThat(routeDto.type()).isEqualTo(CREATE_ROUTE_DTO.type());
         assertThat(routeDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(BUSINESS_HOURS_DTO);
-        assertThat(routeDto.interval()).isEqualTo(CREATE_ROUTE_DTO.interval());
+        assertThat(routeDto.interval()).isEqualTo(Duration.ofMinutes(CREATE_ROUTE_DTO.interval()));
         assertThat(routeDto.stops()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(ROUTE_STOP_DTOS);
     }
@@ -148,11 +151,12 @@ class RouteControllerIntegrationTest {
     @Test
     void updateRouteByName_ReturnUpdatedRoute() throws Exception {
         FullUpdateRouteDto updateDto =
-            new FullUpdateRouteDto("route1", "trolleybus", Duration.ofMinutes(10),
+            new FullUpdateRouteDto("route1", "trolleybus", 10L,
                 BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
 
         MvcResult result = mockMvc.perform(
-                put("/api/v1/route/859de1e9-57ab-4481-818d-20ac979ff02a").contentType(MediaType.APPLICATION_JSON)
+                put("/api/v1/route/859de1e9-57ab-4481-818d-20ac979ff02a").contentType(
+                        MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateDto)))
             .andExpect(status().isCreated()).andReturn();
 
@@ -161,7 +165,7 @@ class RouteControllerIntegrationTest {
 
         assertThat(response.name()).isEqualTo(updateDto.name());
         assertThat(response.type()).isEqualTo(updateDto.type());
-        assertThat(response.interval()).isEqualTo(updateDto.interval());
+        assertThat(response.interval()).isEqualTo(Duration.ofMinutes(updateDto.interval()));
         assertThat(response.stops()).hasSize(
             (int) StreamSupport.stream(updateDto.stops().spliterator(), false).count());
     }

@@ -30,6 +30,8 @@ dependencies {
     implementation(libs.mapstruct)
     implementation(libs.spring.validation)
     implementation(libs.springdoc.openapi.webmvc.ui)
+    implementation(libs.thymeleaf)
+    developmentOnly(libs.spring.devtools)
 
     compileOnly(libs.lombok)
 

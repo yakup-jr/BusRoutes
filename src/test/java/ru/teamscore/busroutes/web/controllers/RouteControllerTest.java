@@ -14,6 +14,7 @@ import ru.teamscore.busroutes.model.commands.FullUpdateRouteCommand;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
 import ru.teamscore.busroutes.model.models.*;
 import ru.teamscore.busroutes.model.services.RouteService;
+import ru.teamscore.busroutes.web.controllers.rest.RouteController;
 import ru.teamscore.busroutes.web.dtos.routes.*;
 import ru.teamscore.busroutes.web.mappers.RouteDtoMapper;
 import ru.teamscore.busroutes.web.mappers.RouteDtoMapperImpl;
@@ -54,18 +55,24 @@ class RouteControllerTest {
         CreateBusinessHoursDto.builder().startAt(LocalTime.of(6, 0)).endAt(LocalTime.of(23, 0))
             .build();
     private static final BusinessHoursDto BUSINESS_HOURS_DTO =
-        BusinessHoursDto.builder().id(UUID.randomUUID()).startAt(LocalTime.of(5, 30)).endAt(LocalTime.of(23, 0)).build();
+        BusinessHoursDto.builder().id(UUID.randomUUID()).startAt(LocalTime.of(5, 30))
+            .endAt(LocalTime.of(23, 0)).build();
     private static final List<SummaryRouteStopDto> ROUTE_STOP_DTOS = List.of(
         SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(0).stopOrder(1)
             .stopName("Stop1").build(),
         SummaryRouteStopDto.builder().id(UUID.randomUUID()).arriveAtFromStart(120).stopOrder(2)
             .stopName("Stop2").build());
+    private static final List<CreateRouteStopDto> CREATE_ROUTE_STOP_DTOS = List.of(
+        CreateRouteStopDto.builder().arriveAtFromStart(0).stopOrder(1)
+            .stopName("Stop1").build(),
+        CreateRouteStopDto.builder().arriveAtFromStart(120).stopOrder(2)
+            .stopName("Stop2").build());
     private static final SummaryRouteDto SUMMARY_ROUTE_DTO =
         SummaryRouteDto.builder().name("route1").type("bus").interval(Duration.ofMinutes(10))
             .businessHours(BUSINESS_HOURS_DTO).stops(ROUTE_STOP_DTOS).build();
     private static final CreateRouteDto CREATE_ROUTE_DTO =
-        new CreateRouteDto("route1", "bus", Duration.ofMinutes(10), CREATE_BUSINESS_HOURS_DTO,
-            ROUTE_STOP_DTOS);
+        new CreateRouteDto("route1", "bus", 10L, CREATE_BUSINESS_HOURS_DTO,
+            CREATE_ROUTE_STOP_DTOS);
 
     @BeforeEach
     void setUp() {
@@ -103,7 +110,7 @@ class RouteControllerTest {
         assertThat(routeDto.type()).isEqualTo(CREATE_ROUTE_DTO.type());
         assertThat(routeDto.businessHours()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(BUSINESS_HOURS_DTO);
-        assertThat(routeDto.interval()).isEqualTo(CREATE_ROUTE_DTO.interval());
+        assertThat(routeDto.interval()).isEqualTo(Duration.ofMinutes(CREATE_ROUTE_DTO.interval()));
         assertThat(routeDto.stops()).usingRecursiveComparison().ignoringFields("id")
             .isEqualTo(ROUTE_STOP_DTOS);
     }
@@ -205,8 +212,7 @@ class RouteControllerTest {
             any(FullUpdateRouteCommand.class))).thenReturn(updatedRoute);
 
         FullUpdateRouteDto updateDto =
-            new FullUpdateRouteDto("route1", "trolleybus",
-                Duration.ofMinutes(10),
+            new FullUpdateRouteDto("route1", "trolleybus", 10L,
                 BUSINESS_HOURS_DTO, ROUTE_STOP_DTOS);
 
         MvcResult result = mockMvc.perform(
@@ -220,17 +226,17 @@ class RouteControllerTest {
 
         assertThat(response.name()).isEqualTo(updateDto.name());
         assertThat(response.type()).isEqualTo(updateDto.type());
-        assertThat(response.interval()).isEqualTo(updateDto.interval());
+        assertThat(response.interval()).isEqualTo(Duration.ofMinutes(updateDto.interval()));
         assertThat(response.stops()).hasSize(
             (int) StreamSupport.stream(updateDto.stops().spliterator(), false).count());
     }
 
     @Test
     void deleteRoute_ReturnNoContent() throws Exception {
-        doNothing().when(routeService).deleteRoute("route1");
+        doNothing().when(routeService).deleteRouteByName("route1");
 
         mockMvc.perform(delete("/api/v1/route/route1")).andExpect(status().isNoContent());
 
-        verify(routeService, times(1)).deleteRoute("route1");
+        verify(routeService, times(1)).deleteRouteByName("route1");
     }
 }

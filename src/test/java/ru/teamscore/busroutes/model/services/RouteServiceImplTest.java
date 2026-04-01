@@ -309,7 +309,7 @@ class RouteServiceImplTest {
         void deleteRoute() {
             when(routeRepository.existsByName(ROUTE_NAME_1)).thenReturn(true);
 
-            routeService.deleteRoute(ROUTE_NAME_1);
+            routeService.deleteRouteByName(ROUTE_NAME_1);
 
             verify(routeRepository).existsByName(ROUTE_NAME_1);
         }
@@ -319,7 +319,7 @@ class RouteServiceImplTest {
             when(routeRepository.existsByName(ROUTE_NAME_1)).thenReturn(false);
 
             assertThatExceptionOfType(NotFoundException.class).isThrownBy(
-                () -> routeService.deleteRoute(ROUTE_NAME_1));
+                () -> routeService.deleteRouteByName(ROUTE_NAME_1));
         }
     }
 

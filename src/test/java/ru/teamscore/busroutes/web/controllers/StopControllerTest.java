@@ -13,6 +13,7 @@ import ru.teamscore.busroutes.model.enums.ItemType;
 import ru.teamscore.busroutes.model.exceptions.NotFoundException;
 import ru.teamscore.busroutes.model.models.Stop;
 import ru.teamscore.busroutes.model.services.StopService;
+import ru.teamscore.busroutes.web.controllers.rest.StopController;
 import ru.teamscore.busroutes.web.dtos.stops.CreateStopDto;
 import ru.teamscore.busroutes.web.dtos.stops.FullUpdateStopDto;
 import ru.teamscore.busroutes.web.dtos.stops.GeographicCoordinatesDto;

@@ -1,5 +1,6 @@
 package ru.teamscore.busroutes.model.services;
 
+import org.springframework.data.domain.Page;
 import ru.teamscore.busroutes.model.commands.CreateRouteCommand;
 import ru.teamscore.busroutes.model.commands.FullUpdateRouteCommand;
 import ru.teamscore.busroutes.model.enums.TravelSortOption;
@@ -12,7 +13,11 @@ import java.util.UUID;
 public interface RouteService {
     Route addRoute(CreateRouteCommand command);
 
+    Page<Route> getRoutes(int page, int size);
+
     List<Travel> getRoutesByStop(String stopName, TravelSortOption sort);
+
+    Route getRouteById(UUID id);
 
     List<Travel> getRoutesByStops(String fromStopName, String toStopName, TravelSortOption sort);
 
@@ -22,5 +27,7 @@ public interface RouteService {
 
     Route updateRoute(UUID routeId, FullUpdateRouteCommand command);
 
-    void deleteRoute(String routeName);
+    void deleteRouteByName(String routeName);
+
+    void deleteRouteById(UUID id);
 }

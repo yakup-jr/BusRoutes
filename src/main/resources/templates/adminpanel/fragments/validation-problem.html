@@ -1,0 +1,18 @@
+<div th:fragment="error-message(fields, err)" th:if="${#fields.hasAnyErrors()}"
+     class="mx-6 mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 animate-in fade-in slide-in-from-top-2">
+    <div class="shrink-0 text-red-500">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+             stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+        </svg>
+    </div>
+    <div>
+        <h5 class="text-sm font-bold text-red-800">Validation Error</h5>
+        <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-1">
+            <li th:each="err : ${#fields.allErrors()}" th:text="${err}">Error
+                message here
+            </li>
+        </ul>
+    </div>
+</div>

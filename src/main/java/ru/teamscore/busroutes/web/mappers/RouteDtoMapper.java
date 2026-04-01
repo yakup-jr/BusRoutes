@@ -12,6 +12,8 @@ import ru.teamscore.busroutes.model.models.RouteStop;
 import ru.teamscore.busroutes.model.models.Travel;
 import ru.teamscore.busroutes.web.dtos.routes.*;
 
+import java.time.Duration;
+
 import static org.mapstruct.ReportingPolicy.WARN;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = WARN,
@@ -34,10 +36,23 @@ public interface RouteDtoMapper {
 
     SummaryRouteDto toDto(Route route);
 
+    FullUpdateRouteDto toFullUpdateRouteDto(Route route);
+
+    Iterable<SummaryRouteStopDto> toDto(Iterable<RouteStop> routeStops);
+
     Iterable<SummaryRouteDto> toRouteDtos(Iterable<Route> routes);
 
     TravelDto toDto(Travel travel);
 
     Iterable<TravelDto> toDtos(Iterable<Travel> travels);
+
+
+    default Duration mapLongToDuration(Long minutes) {
+        return minutes == null ? null : Duration.ofMinutes(minutes);
+    }
+
+    default Long mapDurationToLong(Duration duration) {
+        return duration == null ? null : duration.toMinutes();
+    }
 
 }

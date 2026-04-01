@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head th:replace="/adminpanel/fragments/head-fragment :: headFragment('Edit Route ' + ${route.name})"></head>
+<body>
+<section th:fragment="edit-route(route)"
+         class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans flex items-center justify-center">
+    <div class="w-full max-w-5xl overflow-hidden rounded-xl border border-[#00bcff]/20 bg-white shadow-2xl">
+
+        <div class="bg-[#00bcff] px-6 py-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+                </svg>
+                Edit Route: <span th:text="${updateRouteDto.name}" class="opacity-90">Route Name</span>
+            </h3>
+        </div>
+
+        <form th:action="@{/adminpanel/routes/edit/{id}(id=${routeId})}"
+              th:method="put"
+              th:object="${updateRouteDto}"
+              class="flex flex-col">
+
+            <div th:replace="/adminpanel/fragments/validation-problem :: error-message(fields, err)"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 divide-x divide-slate-100">
+
+                <div class="md:col-span-4 p-6 space-y-5 bg-slate-50/50">
+                    <h4 class="text-xs font-black uppercase tracking-widest text-[#00bcff] mb-4">
+                        General Settings</h4>
+
+                    <input type="hidden" th:field="*{businessHours.id}"/>
+
+                    <div>
+                        <label for="routeName"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Route
+                            Name</label>
+                        <input id="routeName"
+                               th:field="*{name}" type="text"
+                               class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
+                    </div>
+
+                    <div>
+                        <label for="type"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
+                        <input id="type" th:field="*{type}" type="text"
+                               class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff] focus:ring-2 focus:ring-[#00bcff]/20"/>
+                    </div>
+
+                    <div>
+                        <label for="interval"
+                               class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Interval
+                            (Minutes)</label>
+                        <input id="interval" th:field="*{interval}" type="number"
+                               class="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-mono outline-none focus:border-[#00bcff]"/>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="endAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Start
+                                At</label>
+                            <input id="startAt" th:field="*{businessHours.startAt}"
+                                   type="time"
+                                   class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
+                        </div>
+                        <div>
+                            <label for="endAt"
+                                   class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">End
+                                At</label>
+                            <input id="endAt"
+                                   th:field="*{businessHours.endAt}" type="time"
+                                   class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#00bcff]"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-8 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-[#00bcff]">
+                            Route Path & Stops</h4>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold"
+                              id="stop-count"
+                              th:text="${#lists.size(updateRouteDto.stops) + ' STOPS'}">0 STOPS</span>
+                    </div>
+
+                    <div id="stops-container"
+                         class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="relative group stop-row bg-white border border-slate-100 rounded-xl p-3 shadow-sm hover:border-[#00bcff]/30 transition-all"
+                             th:each="stop, counter : ${updateRouteDto.stops}">
+
+                            <input type="hidden"
+                                   th:field="*{stops[__${counter.index}__].id}"/>
+
+                            <input type="hidden"
+                                   th:field="*{stops[__${counter.index}__].stopOrder}"
+                                   class="row-order-input"/>
+
+                            <div class="flex items-center gap-3">
+                                <div class="flex flex-col items-center">
+                                    <span class="text-slate-400 font-mono text-xs row-number"
+                                          th:text="${counter.count}">1</span>
+                                    <div class="w-0.5 h-4 bg-slate-100 my-1 group-last:hidden"></div>
+                                </div>
+
+                                <div class="relative flex-1">
+                                    <input th:field="*{stops[__${counter.index}__].stopName}"
+                                           type="text" autocomplete="off"
+                                           oninput="searchStops(this)"
+                                           placeholder="Search stop..."
+                                           class="stop-input w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#00bcff] transition-all"/>
+                                    <div class="search-results absolute z-30 w-full mt-1 hidden max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl"></div>
+                                </div>
+
+                                <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-2 border border-slate-100">
+                                    <svg class="w-3 h-3 text-slate-400" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path d="M12 6v6l4 2" stroke-width="2"
+                                              stroke-linecap="round"/>
+                                    </svg>
+                                    <input th:field="*{stops[__${counter.index}__].arriveAtFromStart}"
+                                           type="number" placeholder="Secs"
+                                           class="w-16 bg-transparent py-2 text-xs font-mono text-slate-600 outline-none"/>
+                                </div>
+
+                                <button type="button" onclick="removeStop(this)"
+                                        class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                         stroke="currentColor" stroke-width="2">
+                                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addStopRow()"
+                            class="w-full py-3 mt-4 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-[#00bcff] hover:text-[#00bcff] hover:bg-[#00bcff]/5 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor" stroke-width="3">
+                            <path d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        Add New Stop
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-end gap-3">
+                <a href="/adminpanel/routes"
+                   class="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                    Discard Changes
+                </a>
+                <button type="submit"
+                        class="rounded-lg bg-[#ff6800] px-8 py-2.5 text-sm font-black text-white shadow-lg shadow-[#ff6800]/20 hover:bg-[#e65d00] transition-all active:scale-95">
+                    Save Route
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+<script src="/static/_js/route-edit.js" defer></script>
+</body>
+</html>
